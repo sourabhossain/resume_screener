@@ -6,7 +6,7 @@
 <!-- Header -->
 <div class="mb-8">
     <div class="flex items-center text-sm text-gray-500 mb-4">
-        <a href="{% url 'job_list' %}" class="hover:text-primary-600 transition">Jobs</a>
+        <a href="{% url 'core:job_list' %}" class="hover:text-primary-600 transition">Jobs</a>
         <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
@@ -34,13 +34,13 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{% url 'job_edit' job.pk %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium flex items-center">
+            <a href="{% url 'core:job_edit' job.pk %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
                 Edit
             </a>
-            <a href="{% url 'job_delete' job.pk %}" class="px-4 py-2 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition font-medium flex items-center">
+            <a href="{% url 'core:job_delete' job.pk %}" class="px-4 py-2 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition font-medium flex items-center">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
@@ -65,7 +65,7 @@
             <h2 class="text-lg font-semibold text-gray-900">Candidates</h2>
             <p class="text-sm text-gray-500">{{ resumes.count }} applicant{{ resumes.count|pluralize }}</p>
         </div>
-        <a href="{% url 'resume_create' job.pk %}" class="gradient-bg text-white px-4 py-2 rounded-xl hover:opacity-90 transition font-medium flex items-center text-sm">
+        <a href="{% url 'core:resume_create' job.pk %}" class="gradient-bg text-white px-4 py-2 rounded-xl hover:opacity-90 transition font-medium flex items-center text-sm">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
@@ -90,7 +90,7 @@
                 {% for resume in resumes %}
                 <tr class="hover:bg-gray-50 transition">
                     <td class="px-6 py-4">
-                        <a href="{% url 'resume_detail' resume.pk %}" class="font-medium text-gray-900 hover:text-primary-600">
+                        <a href="{% url 'core:resume_detail' resume.pk %}" class="font-medium text-gray-900 hover:text-primary-600">
                             {{ resume.candidate_name }}
                         </a>
                         <p class="text-xs text-gray-500 mt-1">{{ resume.created_at|date:"M d, Y" }}</p>
@@ -140,12 +140,12 @@
                     </td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex justify-end gap-2">
-                            <a href="{% url 'resume_edit' resume.pk %}" class="text-gray-400 hover:text-primary-600 transition" title="Edit">
+                            <a href="{% url 'core:resume_edit' resume.pk %}" class="text-gray-400 hover:text-primary-600 transition" title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </a>
-                            <a href="{% url 'resume_delete' resume.pk %}" class="text-gray-400 hover:text-red-600 transition" title="Delete">
+                            <a href="{% url 'core:resume_delete' resume.pk %}" class="text-gray-400 hover:text-red-600 transition" title="Delete">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -166,7 +166,7 @@
         </div>
         <h3 class="text-lg font-medium text-gray-900 mb-2">No candidates yet</h3>
         <p class="text-gray-500 mb-4">Start screening by adding resumes to this job</p>
-        <a href="{% url 'resume_create' job.pk %}" class="inline-flex items-center gradient-bg text-white px-4 py-2 rounded-xl hover:opacity-90 transition font-medium text-sm">
+        <a href="{% url 'core:resume_create' job.pk %}" class="inline-flex items-center gradient-bg text-white px-4 py-2 rounded-xl hover:opacity-90 transition font-medium text-sm">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>

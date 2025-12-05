@@ -1,15 +1,12 @@
 """
-URL configuration for config project.
+URL patterns for the core app.
 """
-from django.contrib import admin
 from django.urls import path
-from django.conf import settings
-from django.conf.urls.static import static
-from core import views
+from . import views
+
+app_name = 'core'
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    
     # Dashboard
     path('', views.dashboard, name='dashboard'),
     
@@ -26,6 +23,3 @@ urlpatterns = [
     path('resumes/<int:pk>/edit/', views.resume_edit, name='resume_edit'),
     path('resumes/<int:pk>/delete/', views.resume_delete, name='resume_delete'),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

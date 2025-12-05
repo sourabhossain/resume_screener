@@ -39,7 +39,7 @@ def job_create(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Job created successfully!')
-            return redirect('job_list')
+            return redirect('core:job_list')
     else:
         form = JobForm()
     return render(request, 'core/job_form.html', {'form': form, 'title': 'Post New Job'})
@@ -60,7 +60,7 @@ def job_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Job updated successfully!')
-            return redirect('job_detail', pk=pk)
+            return redirect('core:job_detail', pk=pk)
     else:
         form = JobForm(instance=job)
     return render(request, 'core/job_form.html', {'form': form, 'title': 'Edit Job', 'job': job})
@@ -72,7 +72,7 @@ def job_delete(request, pk):
     if request.method == 'POST':
         job.soft_delete()
         messages.success(request, f'Job "{job.title}" deleted successfully!')
-        return redirect('job_list')
+        return redirect('core:job_list')
     return render(request, 'core/confirm_delete.html', {'object': job, 'type': 'job'})
 
 
@@ -87,7 +87,7 @@ def resume_create(request, job_pk):
             resume.job = job
             resume.save()
             messages.success(request, 'Resume added successfully!')
-            return redirect('job_detail', pk=job_pk)
+            return redirect('core:job_detail', pk=job_pk)
     else:
         form = ResumeForm()
     return render(request, 'core/resume_form.html', {'form': form, 'job': job, 'title': 'Add Resume'})
@@ -107,7 +107,7 @@ def resume_edit(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Resume updated successfully!')
-            return redirect('resume_detail', pk=pk)
+            return redirect('core:resume_detail', pk=pk)
     else:
         form = ResumeForm(instance=resume)
     return render(request, 'core/resume_form.html', {'form': form, 'job': resume.job, 'title': 'Edit Resume', 'resume': resume})
@@ -120,5 +120,5 @@ def resume_delete(request, pk):
     if request.method == 'POST':
         resume.soft_delete()
         messages.success(request, f'Resume for "{resume.candidate_name}" deleted successfully!')
-        return redirect('job_detail', pk=job_pk)
+        return redirect('core:job_detail', pk=job_pk)
     return render(request, 'core/confirm_delete.html', {'object': resume, 'type': 'resume', 'job_pk': job_pk})

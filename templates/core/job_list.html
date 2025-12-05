@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold text-gray-900">Job Postings</h1>
         <p class="text-gray-500 mt-1">Manage your open positions and track applications</p>
     </div>
-    <a href="{% url 'job_create' %}" class="gradient-bg text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition font-medium flex items-center space-x-2 shadow-lg shadow-primary-500/25">
+    <a href="{% url 'core:job_create' %}" class="gradient-bg text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition font-medium flex items-center space-x-2 shadow-lg shadow-primary-500/25">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
         </svg>
@@ -55,7 +55,7 @@
                 </svg>
                 <span class="text-sm font-medium">{{ job.resume_count }} Candidates</span>
             </div>
-            <a href="{% url 'job_detail' job.pk %}" class="text-primary-600 font-medium hover:text-primary-700 text-sm flex items-center">
+            <a href="{% url 'core:job_detail' job.pk %}" class="text-primary-600 font-medium hover:text-primary-700 text-sm flex items-center">
                 View Details
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -72,7 +72,7 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">No jobs posted yet</h3>
         <p class="text-gray-500 mb-6">Get started by posting your first job opening</p>
-        <a href="{% url 'job_create' %}" class="inline-flex items-center gradient-bg text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition font-medium">
+        <a href="{% url 'core:job_create' %}" class="inline-flex items-center gradient-bg text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition font-medium">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>

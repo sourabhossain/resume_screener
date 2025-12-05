@@ -68,11 +68,11 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
             <h2 class="text-lg font-semibold text-gray-900">Recent Jobs</h2>
-            <a href="{% url 'job_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">View All →</a>
+            <a href="{% url 'core:job_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">View All →</a>
         </div>
         <div class="divide-y divide-gray-50">
             {% for job in recent_jobs %}
-            <a href="{% url 'job_detail' job.pk %}" class="block px-6 py-4 hover:bg-gray-50 transition">
+            <a href="{% url 'core:job_detail' job.pk %}" class="block px-6 py-4 hover:bg-gray-50 transition">
                 <div class="flex justify-between items-start">
                     <div>
                         <h3 class="font-medium text-gray-900">{{ job.title }}</h3>
@@ -88,7 +88,7 @@
             </a>
             {% empty %}
             <div class="px-6 py-8 text-center text-gray-500">
-                <p>No jobs yet. <a href="{% url 'job_create' %}" class="text-primary-600 hover:underline">Create your first job</a></p>
+                <p>No jobs yet. <a href="{% url 'core:job_create' %}" class="text-primary-600 hover:underline">Create your first job</a></p>
             </div>
             {% endfor %}
         </div>
@@ -101,7 +101,7 @@
         </div>
         <div class="divide-y divide-gray-50">
             {% for resume in recent_resumes %}
-            <a href="{% url 'resume_detail' resume.pk %}" class="block px-6 py-4 hover:bg-gray-50 transition">
+            <a href="{% url 'core:resume_detail' resume.pk %}" class="block px-6 py-4 hover:bg-gray-50 transition">
                 <div class="flex justify-between items-center">
                     <div>
                         <h3 class="font-medium text-gray-900">{{ resume.candidate_name }}</h3>

@@ -24,7 +24,7 @@
             
             <form method="post" class="flex justify-center gap-3">
                 {% csrf_token %}
-                <a href="{% if type == 'job' %}{% url 'job_detail' object.pk %}{% else %}{% url 'job_detail' job_pk %}{% endif %}" class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium">
+                <a href="{% if type == 'job' %}{% url 'core:job_detail' object.pk %}{% else %}{% url 'core:job_detail' job_pk %}{% endif %}" class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium">
                     Cancel
                 </a>
                 <button type="submit" class="px-5 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition font-medium">
