@@ -113,3 +113,17 @@ class Resume(SoftDeleteModel):
     
     def __str__(self):
         return f"{self.candidate_name} - {self.job.title}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate tier and recommendation based on final_score."""
+        if self.final_score is not None:
+            if self.final_score >= 80:
+                self.tier = 'top'
+                self.recommendation = 'interview'
+            elif self.final_score >= 60:
+                self.tier = 'mid'
+                self.recommendation = 'talent_pool'
+            else:
+                self.tier = 'low'
+                self.recommendation = 'reject'
+        super().save(*args, **kwargs)

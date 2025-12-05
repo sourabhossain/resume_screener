@@ -3,45 +3,67 @@
 {% block title %}{{ job.title }} - ResumeAI{% endblock %}
 
 {% block content %}
-<!-- Header -->
+<!-- Breadcrumb & Header -->
 <div class="mb-8">
-    <div class="flex items-center text-sm text-gray-500 mb-4">
-        <a href="{% url 'core:job_list' %}" class="hover:text-primary-600 transition">Jobs</a>
-        <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <nav class="flex items-center text-sm text-gray-500 mb-6">
+        <a href="{% url 'core:job_list' %}" class="hover:text-primary-600 transition flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            Jobs
+        </a>
+        <svg class="w-4 h-4 mx-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
-        <span class="text-gray-900">{{ job.title }}</span>
-    </div>
+        <span class="text-gray-900 font-medium">{{ job.title|truncatechars:40 }}</span>
+    </nav>
     
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <h1 class="text-3xl font-bold text-gray-900">{{ job.title }}</h1>
-                <span class="px-3 py-1 text-sm font-medium rounded-full
-                    {% if job.status == 'active' %}bg-green-100 text-green-700
-                    {% elif job.status == 'draft' %}bg-yellow-100 text-yellow-700
-                    {% else %}bg-gray-100 text-gray-700{% endif %}">
-                    {{ job.get_status_display }}
-                </span>
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        <div class="flex items-start gap-5">
+            <div class="w-16 h-16 rounded-2xl gradient-bg flex items-center justify-center shadow-lg shadow-primary-500/30 shrink-0">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
             </div>
-            <div class="flex items-center gap-4 mt-2 text-gray-500 text-sm">
-                {% if job.posted_date %}
-                <span>Posted: {{ job.posted_date|date:"M d, Y" }}</span>
-                {% endif %}
-                {% if job.closing_date %}
-                <span>Closes: {{ job.closing_date|date:"M d, Y" }}</span>
-                {% endif %}
+            <div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h1 class="text-3xl font-bold text-gray-900">{{ job.title }}</h1>
+                    <span class="px-3 py-1.5 text-sm font-bold rounded-full
+                        {% if job.status == 'active' %}bg-emerald-100 text-emerald-700
+                        {% elif job.status == 'draft' %}bg-amber-100 text-amber-700
+                        {% else %}bg-gray-100 text-gray-600{% endif %}">
+                        {{ job.get_status_display }}
+                    </span>
+                </div>
+                <div class="flex items-center gap-4 mt-3 text-gray-500 text-sm">
+                    {% if job.posted_date %}
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Posted {{ job.posted_date|date:"M d, Y" }}
+                    </span>
+                    {% endif %}
+                    {% if job.closing_date %}
+                    <span class="flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Closes {{ job.closing_date|date:"M d, Y" }}
+                    </span>
+                    {% endif %}
+                </div>
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{% url 'core:job_edit' job.pk %}" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="{% url 'core:job_edit' job.pk %}" class="px-5 py-2.5 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
                 Edit
             </a>
-            <a href="{% url 'core:job_delete' job.pk %}" class="px-4 py-2 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition font-medium flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <a href="{% url 'core:job_delete' job.pk %}" class="px-5 py-2.5 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 transition-all font-semibold flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
                 Delete
@@ -52,21 +74,26 @@
 
 <!-- Job Description -->
 {% if job.description %}
-<div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-8">
-    <h2 class="text-lg font-semibold text-gray-900 mb-4">Job Description</h2>
-    <div class="prose text-gray-600 whitespace-pre-wrap">{{ job.description }}</div>
+<div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        Job Description
+    </h2>
+    <div class="prose max-w-none text-gray-600 whitespace-pre-wrap leading-relaxed">{{ job.description }}</div>
 </div>
 {% endif %}
 
 <!-- Candidates Section -->
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+    <div class="px-8 py-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-lg font-semibold text-gray-900">Candidates</h2>
-            <p class="text-sm text-gray-500">{{ resumes.count }} applicant{{ resumes.count|pluralize }}</p>
+            <h2 class="text-xl font-bold text-gray-900">Candidates</h2>
+            <p class="text-gray-500 text-sm mt-1">{{ resumes.count }} applicant{{ resumes.count|pluralize }} for this position</p>
         </div>
-        <a href="{% url 'core:resume_create' job.pk %}" class="gradient-bg text-white px-4 py-2 rounded-xl hover:opacity-90 transition font-medium flex items-center text-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{% url 'core:resume_create' job.pk %}" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg self-start sm:self-auto">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
             Add Resume
@@ -76,76 +103,81 @@
     {% if resumes %}
     <div class="overflow-x-auto">
         <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-100">
+            <thead class="bg-gray-50/50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Candidate</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tier</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Recommendation</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Scores</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Final</th>
-                    <th class="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Candidate</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tier</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Decision</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Scores</th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Final</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 {% for resume in resumes %}
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4">
-                        <a href="{% url 'core:resume_detail' resume.pk %}" class="font-medium text-gray-900 hover:text-primary-600">
-                            {{ resume.candidate_name }}
+                <tr class="hover:bg-gradient-to-r hover:from-primary-50/30 hover:to-transparent transition-all">
+                    <td class="px-6 py-5">
+                        <a href="{% url 'core:resume_detail' resume.pk %}" class="flex items-center gap-4 group">
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-violet-500/20">
+                                {{ resume.candidate_name|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">{{ resume.candidate_name }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">Added {{ resume.created_at|date:"M d, Y" }}</p>
+                            </div>
                         </a>
-                        <p class="text-xs text-gray-500 mt-1">{{ resume.created_at|date:"M d, Y" }}</p>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-5">
                         {% if resume.tier %}
-                        <span class="px-2 py-1 text-xs font-medium rounded-full
-                            {% if resume.tier == 'top' %}bg-green-100 text-green-700
-                            {% elif resume.tier == 'mid' %}bg-yellow-100 text-yellow-700
+                        <span class="px-3 py-1.5 text-xs font-bold rounded-full
+                            {% if resume.tier == 'top' %}bg-emerald-100 text-emerald-700
+                            {% elif resume.tier == 'mid' %}bg-amber-100 text-amber-700
                             {% else %}bg-gray-100 text-gray-600{% endif %}">
                             {{ resume.get_tier_display }}
                         </span>
                         {% else %}
-                        <span class="text-gray-400">-</span>
+                        <span class="text-gray-400">—</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-5">
                         {% if resume.recommendation %}
-                        <span class="px-2 py-1 text-xs font-medium rounded-full
-                            {% if resume.recommendation == 'interview' %}bg-green-100 text-green-700
-                            {% elif resume.recommendation == 'talent_pool' %}bg-blue-100 text-blue-700
+                        <span class="px-3 py-1.5 text-xs font-bold rounded-full
+                            {% if resume.recommendation == 'interview' %}bg-emerald-100 text-emerald-700
+                            {% elif resume.recommendation == 'talent_pool' %}bg-sky-100 text-sky-700
                             {% else %}bg-red-100 text-red-700{% endif %}">
                             {{ resume.get_recommendation_display }}
                         </span>
                         {% else %}
-                        <span class="text-gray-400">-</span>
+                        <span class="text-gray-400">—</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-500">
-                        <div class="flex gap-3">
-                            {% if resume.experience_score %}<span title="Experience">Exp: {{ resume.experience_score|floatformat:0 }}</span>{% endif %}
-                            {% if resume.education_score %}<span title="Education">Edu: {{ resume.education_score|floatformat:0 }}</span>{% endif %}
-                            {% if resume.skills_score %}<span title="Skills">Skl: {{ resume.skills_score|floatformat:0 }}</span>{% endif %}
+                    <td class="px-6 py-5">
+                        <div class="flex gap-4 text-sm text-gray-500">
+                            {% if resume.experience_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span>Experience: {{ resume.experience_score|floatformat:0 }}</span>{% endif %}
+                            {% if resume.education_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span>Education: {{ resume.education_score|floatformat:0 }}</span>{% endif %}
+                            {% if resume.skills_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400"></span>Skills: {{ resume.skills_score|floatformat:0 }}</span>{% endif %}
                         </div>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-5 text-center">
                         {% if resume.final_score %}
-                        <span class="text-lg font-bold
-                            {% if resume.final_score >= 80 %}text-green-600
-                            {% elif resume.final_score >= 60 %}text-yellow-600
-                            {% else %}text-red-600{% endif %}">
+                        <span class="text-2xl font-black
+                            {% if resume.final_score >= 80 %}text-emerald-600
+                            {% elif resume.final_score >= 60 %}text-amber-500
+                            {% else %}text-red-500{% endif %}">
                             {{ resume.final_score|floatformat:0 }}%
                         </span>
                         {% else %}
-                        <span class="text-gray-400">-</span>
+                        <span class="text-gray-400">—</span>
                         {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-6 py-5 text-right">
                         <div class="flex justify-end gap-2">
-                            <a href="{% url 'core:resume_edit' resume.pk %}" class="text-gray-400 hover:text-primary-600 transition" title="Edit">
+                            <a href="{% url 'core:resume_edit' resume.pk %}" class="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition" title="Edit">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </a>
-                            <a href="{% url 'core:resume_delete' resume.pk %}" class="text-gray-400 hover:text-red-600 transition" title="Delete">
+                            <a href="{% url 'core:resume_delete' resume.pk %}" class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -158,19 +190,19 @@
         </table>
     </div>
     {% else %}
-    <div class="px-6 py-12 text-center">
-        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="px-8 py-16 text-center">
+        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
         </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No candidates yet</h3>
-        <p class="text-gray-500 mb-4">Start screening by adding resumes to this job</p>
-        <a href="{% url 'core:resume_create' job.pk %}" class="inline-flex items-center gradient-bg text-white px-4 py-2 rounded-xl hover:opacity-90 transition font-medium text-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No candidates yet</h3>
+        <p class="text-gray-500 mb-6">Start screening by adding resumes to this job</p>
+        <a href="{% url 'core:resume_create' job.pk %}" class="inline-flex items-center gap-2 btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
-            Add Resume
+            Add First Resume
         </a>
     </div>
     {% endif %}

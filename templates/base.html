@@ -5,68 +5,187 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Resume AI Screener{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
                     colors: {
                         primary: {
-                            50: '#eef2ff',
-                            100: '#e0e7ff',
-                            200: '#c7d2fe',
-                            300: '#a5b4fc',
-                            400: '#818cf8',
-                            500: '#6366f1',
-                            600: '#4f46e5',
-                            700: '#4338ca',
-                            800: '#3730a3',
-                            900: '#312e81',
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            50: '#fdf4ff',
+                            100: '#fae8ff',
+                            200: '#f5d0fe',
+                            300: '#f0abfc',
+                            400: '#e879f9',
+                            500: '#d946ef',
+                            600: '#c026d3',
+                            700: '#a21caf',
+                            800: '#86198f',
+                            900: '#701a75',
                         }
+                    },
+                    boxShadow: {
+                        'glow': '0 0 40px -10px rgba(14, 165, 233, 0.3)',
+                        'glow-lg': '0 0 60px -15px rgba(14, 165, 233, 0.4)',
                     }
                 }
             }
         }
     </script>
     <style>
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 50%, #d946ef 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 50%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         .card-hover {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.5);
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        .form-input-file {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.75rem;
+            background: #f9fafb;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .form-input-file:hover {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .nav-link {
+            position: relative;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .nav-link:hover {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            color: #0ea5e9;
+        }
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+            color: #0ea5e9;
+        }
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gradient-to-br from-slate-50 via-white to-sky-50 min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
+    <nav class="glass sticky top-0 z-50 border-b border-gray-100/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-8">
-                    <a href="{% url 'core:dashboard' %}" class="flex items-center space-x-2">
-                        <div class="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
+            <div class="flex justify-between h-18 py-3">
+                <div class="flex items-center space-x-10">
+                    <a href="{% url 'core:dashboard' %}" class="flex items-center space-x-3 group">
+                        <div class="w-11 h-11 gradient-bg rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:shadow-primary-500/50 transition-all duration-300 group-hover:scale-105">
                             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </div>
                         <span class="text-2xl font-bold">
-                            <span class="text-primary-600">Resume</span><span class="text-gray-900">AI</span>
+                            <span class="gradient-text">Resume</span><span class="text-gray-900">AI</span>
                         </span>
                     </a>
-                    <div class="hidden md:flex items-center space-x-1">
-                        <a href="{% url 'core:dashboard' %}" class="px-4 py-2 rounded-lg text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition font-medium">
-                            Dashboard
+                    <div class="hidden md:flex items-center space-x-2">
+                        <a href="{% url 'core:dashboard' %}" class="nav-link text-gray-600">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                                </svg>
+                                Dashboard
+                            </span>
                         </a>
-                        <a href="{% url 'core:job_list' %}" class="px-4 py-2 rounded-lg text-gray-600 hover:text-primary-600 hover:bg-primary-50 transition font-medium">
-                            Jobs
+                        <a href="{% url 'core:job_list' %}" class="nav-link text-gray-600">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                Jobs
+                            </span>
                         </a>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <a href="{% url 'core:job_create' %}" class="gradient-bg text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition font-medium flex items-center space-x-2 shadow-lg shadow-primary-500/25">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'core:job_create' %}" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -79,25 +198,40 @@
 
     <!-- Messages -->
     {% if messages %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {% for message in messages %}
-        <div class="mb-2 p-4 rounded-xl {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
-            {{ message }}
+        <div class="mb-3 p-4 rounded-xl flex items-center gap-3 {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% else %}bg-sky-50 text-sky-800 border border-sky-200{% endif %} animate-fade-in">
+            {% if message.tags == 'success' %}
+            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {% endif %}
+            <span class="font-medium">{{ message }}</span>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         {% block content %}
         {% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t mt-auto py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-gray-500 text-sm">
-            © 2024 ResumeAI. AI-Powered Resume Screening System.
+    <footer class="border-t border-gray-100 mt-auto py-8 bg-white/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <span class="font-semibold text-gray-700">ResumeAI</span>
+                </div>
+                <p class="text-gray-500 text-sm">© 2025 ResumeAI. AI-Powered Resume Screening System.</p>
+            </div>
         </div>
     </footer>
 </body>
