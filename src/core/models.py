@@ -1,0 +1,115 @@
+from django.db import models
+from django.utils import timezone
+
+
+class SoftDeleteManager(models.Manager):
+    """Manager that filters out soft-deleted objects by default."""
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(is_deleted=False)
+    
+    def all_with_deleted(self):
+        return super().get_queryset()
+    
+    def deleted_only(self):
+        return super().get_queryset().filter(is_deleted=True)
+
+
+class SoftDeleteModel(models.Model):
+    """Abstract base model with soft delete functionality."""
+    
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
+    
+    class Meta:
+        abstract = True
+    
+    def soft_delete(self):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+    
+    def restore(self):
+        self.is_deleted = False
+        self.deleted_at = None
+        self.save()
+
+
+class Job(SoftDeleteModel):
+    """Job Description model - stores job postings for resume screening."""
+    
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('active', 'Active'),
+        ('closed', 'Closed'),
+    ]
+    
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    file_name = models.CharField(max_length=255, blank=True)
+    file = models.FileField(upload_to='jobs/', blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    posted_date = models.DateField(null=True, blank=True)
+    closing_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    file_type = models.CharField(max_length=50, blank=True)
+    
+    class Meta:
+        db_table = 'job_description'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+    
+    @property
+    def active_resumes(self):
+        return self.resumes.filter(is_deleted=False)
+
+
+class Resume(SoftDeleteModel):
+    """Resume model - stores candidate resumes and their screening results."""
+    
+    TIER_CHOICES = [
+        ('low', 'Low'),
+        ('mid', 'Mid'),
+        ('top', 'Top'),
+    ]
+    
+    RECOMMENDATION_CHOICES = [
+        ('interview', 'Interview'),
+        ('talent_pool', 'Talent Pool'),
+        ('reject', 'Reject'),
+    ]
+    
+    job = models.ForeignKey(
+        Job, 
+        on_delete=models.CASCADE, 
+        related_name='resumes',
+        db_column='job_id'
+    )
+    file_name = models.CharField(max_length=255, blank=True)
+    file = models.FileField(upload_to='resumes/', blank=True, null=True)
+    candidate_name = models.CharField(max_length=255)
+    raw_text = models.TextField(blank=True)
+    tier = models.CharField(max_length=10, choices=TIER_CHOICES, blank=True)
+    recommendation = models.CharField(max_length=20, choices=RECOMMENDATION_CHOICES, blank=True)
+    matched_skills = models.JSONField(default=list, blank=True)
+    missing_skills = models.JSONField(default=list, blank=True)
+    experience_score = models.FloatField(null=True, blank=True)
+    education_score = models.FloatField(null=True, blank=True)
+    skills_score = models.FloatField(null=True, blank=True)
+    final_score = models.FloatField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    file_type = models.CharField(max_length=50, blank=True)
+    
+    class Meta:
+        db_table = 'resumes'
+        ordering = ['-final_score', '-created_at']
+    
+    def __str__(self):
+        return f"{self.candidate_name} - {self.job.title}"

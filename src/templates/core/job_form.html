@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - ResumeAI{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="flex items-center text-sm text-gray-500 mb-6">
+        <a href="{% url 'job_list' %}" class="hover:text-primary-600 transition">Jobs</a>
+        <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+        <span class="text-gray-900">{{ title }}</span>
+    </div>
+    
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <h1 class="text-xl font-semibold text-gray-900">{{ title }}</h1>
+            <p class="text-gray-500 text-sm mt-1">Fill in the job details below</p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Title -->
+            <div>
+                <label for="id_title" class="block text-sm font-medium text-gray-700 mb-2">Job Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.title.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- File Upload -->
+            <div>
+                <label for="id_file" class="block text-sm font-medium text-gray-700 mb-2">Job Description File</label>
+                {{ form.file }}
+                {% if job.file %}
+                <p class="mt-2 text-sm text-gray-500">Current file: {{ job.file_name }}</p>
+                {% endif %}
+                {% if form.file.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.file.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Status -->
+            <div>
+                <label for="id_status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                {{ form.status }}
+            </div>
+            
+            <!-- Date Fields -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="id_posted_date" class="block text-sm font-medium text-gray-700 mb-2">Posted Date</label>
+                    {{ form.posted_date }}
+                </div>
+                <div>
+                    <label for="id_closing_date" class="block text-sm font-medium text-gray-700 mb-2">Closing Date</label>
+                    {{ form.closing_date }}
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <a href="{% if job %}{% url 'job_detail' job.pk %}{% else %}{% url 'job_list' %}{% endif %}" class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium">
+                    Cancel
+                </a>
+                <button type="submit" class="gradient-bg text-white px-5 py-2.5 rounded-xl hover:opacity-90 transition font-medium">
+                    {% if job %}Update Job{% else %}Create Job{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
