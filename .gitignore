@@ -15,3 +15,15 @@ staticfiles/
 venv/
 .venv/
 env/
+
+# Logs
+logs/
+!logs/.gitkeep
+
+# Docker
+postgres_data/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
