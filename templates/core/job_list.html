@@ -4,43 +4,90 @@
 
 {% block content %}
 
-<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-10">
-    <div>
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">Job Postings</h1>
-        <p class="text-lg text-gray-500">Manage your open positions and track applications</p>
-    </div>
-    <a href="{% url 'core:job_create' %}" class="btn-primary text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 shadow-xl self-start lg:self-auto">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-        </svg>
-        <span>Post New Job</span>
-    </a>
+<div class="mb-8">
+    <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Job Postings</h1>
+    <p class="text-lg text-gray-500 dark:text-gray-400">Manage your open positions and track applications</p>
 </div>
 
+<!-- Search and Filters -->
+<div class="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+    <!-- Search Bar -->
+    <form method="get" action="{% url 'core:job_list' %}" class="relative flex-1 max-w-md">
+        <input type="text" 
+               name="q" 
+               value="{{ search_query }}"
+               placeholder="Search jobs... (Press Enter)" 
+               class="w-full pl-11 pr-4 py-3 bg-white dark:bg-dark-800 border-2 border-gray-200 dark:border-dark-600 rounded-xl text-sm focus:outline-none focus:border-primary-500 dark:focus:border-primary-400 transition-all placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+        {% if status_filter %}
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        {% endif %}
+    </form>
+    
+    <!-- Status Filter Tabs -->
+    <div class="flex bg-gray-100 dark:bg-dark-700 p-1 rounded-xl">
+        <a href="{% url 'core:job_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" 
+           class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {% if not status_filter %}bg-white dark:bg-dark-600 text-gray-900 dark:text-white shadow-sm{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+            All
+        </a>
+        <a href="{% url 'core:job_list' %}?status=active{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {% if status_filter == 'active' %}bg-white dark:bg-dark-600 text-emerald-600 dark:text-emerald-400 shadow-sm{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+            Active
+        </a>
+        <a href="{% url 'core:job_list' %}?status=draft{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {% if status_filter == 'draft' %}bg-white dark:bg-dark-600 text-amber-600 dark:text-amber-400 shadow-sm{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+            Draft
+        </a>
+        <a href="{% url 'core:job_list' %}?status=closed{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {% if status_filter == 'closed' %}bg-white dark:bg-dark-600 text-gray-600 dark:text-gray-400 shadow-sm{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+            Closed
+        </a>
+    </div>
+</div>
+
+<!-- Results Summary -->
+{% if search_query or status_filter %}
+<div class="mb-6 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+    <span>Showing {{ jobs|length }} result{{ jobs|length|pluralize }}</span>
+    {% if search_query %}
+    <span class="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 rounded-lg font-medium">
+        "{{ search_query }}"
+    </span>
+    {% endif %}
+    {% if status_filter %}
+    <span class="px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium capitalize">
+        {{ status_filter }}
+    </span>
+    {% endif %}
+    <a href="{% url 'core:job_list' %}" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">Clear filters</a>
+</div>
+{% endif %}
 
 <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
     {% for job in jobs %}
-    <div class="group bg-white p-6 rounded-2xl shadow-sm border border-gray-100 card-hover relative overflow-hidden">
+    <div class="group bg-white dark:bg-dark-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-700 card-hover relative overflow-hidden">
         <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-500/5 to-violet-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
         
         <div class="relative">
 
             <div class="flex justify-between items-start mb-4">
                 <div class="flex-1 min-w-0 pr-4">
-                    <h3 class="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-primary-600 transition-colors">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white line-clamp-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                         {{ job.title }}
                     </h3>
                 </div>
                 <span class="px-3 py-1.5 text-xs font-bold rounded-full shrink-0
-                    {% if job.status == 'active' %}bg-emerald-100 text-emerald-700
-                    {% elif job.status == 'draft' %}bg-amber-100 text-amber-700
-                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    {% if job.status == 'active' %}bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400
+                    {% elif job.status == 'draft' %}bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400
+                    {% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400{% endif %}">
                     {{ job.get_status_display }}
                 </span>
             </div>
             
 
-            <div class="space-y-3 text-sm text-gray-500 mb-6">
+            <div class="space-y-3 text-sm text-gray-500 dark:text-gray-400 mb-6">
                 {% if job.posted_date %}
                 <p class="flex items-center gap-2">
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,12 +107,12 @@
             </div>
             
 
-            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div class="flex items-center gap-2 text-gray-600">
+            <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-dark-700">
+                <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <div class="flex -space-x-2">
                         {% for i in "123"|make_list %}
                         {% if forloop.counter <= job.resume_count and forloop.counter <= 3 %}
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 border-2 border-white dark:border-dark-800 flex items-center justify-center text-white text-xs font-bold shadow">
                             {{ forloop.counter }}
                         </div>
                         {% endif %}
@@ -73,7 +120,7 @@
                     </div>
                     <span class="text-sm font-semibold">{{ job.resume_count }} Candidate{{ job.resume_count|pluralize }}</span>
                 </div>
-                <a href="{% url 'core:job_detail' job.pk %}" class="text-primary-600 font-semibold hover:text-primary-700 text-sm flex items-center gap-1 group/link">
+                <a href="{% url 'core:job_detail' job.pk %}" class="text-primary-600 dark:text-primary-400 font-semibold hover:text-primary-700 text-sm flex items-center gap-1 group/link">
                     View
                     <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -84,14 +131,14 @@
     </div>
     {% empty %}
     <div class="col-span-full">
-        <div class="bg-white rounded-3xl p-16 text-center border border-gray-100 shadow-sm">
-            <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <div class="bg-white dark:bg-dark-800 rounded-3xl p-16 text-center border border-gray-100 dark:border-dark-700 shadow-sm">
+            <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-100 dark:from-dark-700 to-gray-200 dark:to-dark-600 flex items-center justify-center">
                 <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
             </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-3">No jobs posted yet</h3>
-            <p class="text-gray-500 mb-8 max-w-md mx-auto">Get started by creating your first job posting to attract top talent</p>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">No jobs posted yet</h3>
+            <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">Get started by creating your first job posting to attract top talent</p>
             <a href="{% url 'core:job_create' %}" class="inline-flex items-center gap-2 btn-primary text-white px-8 py-3.5 rounded-xl font-semibold shadow-xl">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>

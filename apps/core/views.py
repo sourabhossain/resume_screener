@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg
 from .models import Job, Resume
 from .forms import JobForm, ResumeForm
 
 
+@login_required
 def dashboard(request):
     """Dashboard with overview statistics."""
     total_jobs = Job.objects.count()
@@ -26,12 +28,38 @@ def dashboard(request):
     return render(request, 'core/dashboard.html', context)
 
 
+
+@login_required
 def job_list(request):
-    """List all jobs."""
-    jobs = Job.objects.annotate(resume_count=Count('resumes')).order_by('-created_at')
-    return render(request, 'core/job_list.html', {'jobs': jobs})
+    """List all jobs with search and filter support."""
+    from django.db.models import Q
+    
+    jobs = Job.objects.annotate(resume_count=Count('resumes'))
+    
+    # Search functionality
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        jobs = jobs.filter(
+            Q(title__icontains=search_query) | 
+            Q(description__icontains=search_query)
+        )
+    
+    # Status filter
+    status_filter = request.GET.get('status', '').strip()
+    if status_filter and status_filter in ['active', 'draft', 'closed']:
+        jobs = jobs.filter(status=status_filter)
+    
+    jobs = jobs.order_by('-created_at')
+    
+    context = {
+        'jobs': jobs,
+        'search_query': search_query,
+        'status_filter': status_filter,
+    }
+    return render(request, 'core/job_list.html', context)
 
 
+@login_required
 def job_create(request):
     """Create a new job."""
     if request.method == 'POST':
@@ -45,6 +73,7 @@ def job_create(request):
     return render(request, 'core/job_form.html', {'form': form, 'title': 'Post New Job'})
 
 
+@login_required
 def job_detail(request, pk):
     """View job details with associated resumes."""
     job = get_object_or_404(Job, pk=pk)
@@ -52,6 +81,7 @@ def job_detail(request, pk):
     return render(request, 'core/job_detail.html', {'job': job, 'resumes': resumes})
 
 
+@login_required
 def job_edit(request, pk):
     """Edit an existing job."""
     job = get_object_or_404(Job, pk=pk)
@@ -66,6 +96,7 @@ def job_edit(request, pk):
     return render(request, 'core/job_form.html', {'form': form, 'title': 'Edit Job', 'job': job})
 
 
+@login_required
 def job_delete(request, pk):
     """Soft delete a job."""
     job = get_object_or_404(Job, pk=pk)
@@ -77,6 +108,7 @@ def job_delete(request, pk):
 
 
 # Resume Views
+@login_required
 def resume_create(request, job_pk):
     """Create a new resume for a job."""
     job = get_object_or_404(Job, pk=job_pk)
@@ -100,12 +132,14 @@ def resume_create(request, job_pk):
     return render(request, 'core/resume_form.html', {'form': form, 'job': job, 'title': 'Add Resume'})
 
 
+@login_required
 def resume_detail(request, pk):
     """View resume details."""
     resume = get_object_or_404(Resume, pk=pk)
     return render(request, 'core/resume_detail.html', {'resume': resume})
 
 
+@login_required
 def resume_edit(request, pk):
     """Edit an existing resume."""
     resume = get_object_or_404(Resume, pk=pk)
@@ -120,6 +154,7 @@ def resume_edit(request, pk):
     return render(request, 'core/resume_form.html', {'form': form, 'job': resume.job, 'title': 'Edit Resume', 'resume': resume})
 
 
+@login_required
 def resume_delete(request, pk):
     """Soft delete a resume."""
     resume = get_object_or_404(Resume, pk=pk)
