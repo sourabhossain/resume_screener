@@ -7,6 +7,19 @@ from apps.core.models import Job, Resume
 
 
 @pytest.mark.django_db
+class TestHealthCheck:
+    """Tests for health check endpoint."""
+    
+    def test_health_check_success(self, client):
+        """Test health check returns 200 and healthy status."""
+        response = client.get(reverse('core:health_check'))
+        assert response.status_code == 200
+        data = response.json()
+        assert data['status'] == 'healthy'
+        assert data['database'] == 'connected'
+
+
+@pytest.mark.django_db
 class TestDashboardView:
     """Tests for dashboard view."""
     

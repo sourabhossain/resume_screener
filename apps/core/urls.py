@@ -9,6 +9,7 @@ app_name = 'core'
 urlpatterns = [
     # Dashboard
     path('', views.dashboard, name='dashboard'),
+    path('health/', views.health_check, name='health_check'),
     
     # Job URLs
     path('jobs/', views.job_list, name='job_list'),

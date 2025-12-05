@@ -6,11 +6,19 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 from .models import Job, Resume
 from .serializers import JobListSerializer, JobDetailSerializer, ResumeSerializer
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='GET', block=True), name='list')
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='GET', block=True), name='retrieve')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='create')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='PUT', block=True), name='update')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='PATCH', block=True), name='partial_update')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='DELETE', block=True), name='destroy')
 class JobViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Job CRUD operations.
@@ -57,6 +65,12 @@ class JobViewSet(viewsets.ModelViewSet):
         return Response({'status': 'restored'})
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='GET', block=True), name='list')
+@method_decorator(ratelimit(key='user_or_ip', rate='30/m', method='GET', block=True), name='retrieve')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='create')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='PUT', block=True), name='update')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='PATCH', block=True), name='partial_update')
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='DELETE', block=True), name='destroy')
 class ResumeViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Resume CRUD operations.

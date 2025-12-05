@@ -2,8 +2,30 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg
+from django.http import JsonResponse
+from django.db import connection
 from .models import Job, Resume
 from .forms import JobForm, ResumeForm
+
+
+def health_check(request):
+    """Health check endpoint for monitoring and load balancers."""
+    try:
+        # Check database connectivity
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        
+        return JsonResponse({
+            'status': 'healthy',
+            'database': 'connected',
+            'version': '1.0.0'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e)
+        }, status=503)
 
 
 @login_required
