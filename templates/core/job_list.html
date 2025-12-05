@@ -28,8 +28,8 @@
     
     <!-- Status Filter Tabs -->
     <div class="flex bg-gray-100 dark:bg-dark-700 p-1 rounded-xl">
-        <a href="{% url 'core:job_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" 
-           class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {% if not status_filter %}bg-white dark:bg-dark-600 text-gray-900 dark:text-white shadow-sm{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+        <a href="{% url 'core:job_list' %}?status=all{% if search_query %}&q={{ search_query }}{% endif %}" 
+           class="px-4 py-2 text-sm font-semibold rounded-lg transition-all {% if status_filter == 'all' %}bg-white dark:bg-dark-600 text-gray-900 dark:text-white shadow-sm{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
             All
         </a>
         <a href="{% url 'core:job_list' %}?status=active{% if search_query %}&q={{ search_query }}{% endif %}" 

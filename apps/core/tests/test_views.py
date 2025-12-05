@@ -65,6 +65,28 @@ class TestJobViews:
         assert response.status_code == 200
         assert sample_job in response.context['jobs']
     
+    def test_job_list_default_active(self, authenticated_client, sample_job):
+        """Test job list defaults to active status."""
+        # Create a draft job
+        Job.objects.create(title='Draft Job', status='draft')
+        
+        response = authenticated_client.get(reverse('core:job_list'))
+        
+        # Should only contain active jobs (sample_job is active)
+        assert len(response.context['jobs']) == 1
+        assert response.context['jobs'][0] == sample_job
+        assert response.context['status_filter'] == 'active'
+
+    def test_job_list_all_filter(self, authenticated_client, sample_job):
+        """Test explicit 'all' filter returns all jobs."""
+        Job.objects.create(title='Draft Job', status='draft')
+        
+        response = authenticated_client.get(reverse('core:job_list'), {'status': 'all'})
+        
+        # Should contain both jobs
+        assert len(response.context['jobs']) == 2
+        assert response.context['status_filter'] == 'all'
+        
     def test_job_list_filter_status(self, authenticated_client, sample_job):
         """Test job list status filter."""
         response = authenticated_client.get(

@@ -67,9 +67,13 @@ def job_list(request):
             Q(description__icontains=search_query)
         )
     
-    # Status filter
-    status_filter = request.GET.get('status', '').strip()
-    if status_filter and status_filter in ['active', 'draft', 'closed']:
+    # Status filter - default to 'active' if not specified
+    status_filter = request.GET.get('status', 'active').strip()
+    
+    # Handle 'all' to show all jobs (no filter)
+    if status_filter == 'all':
+        pass  # No filtering
+    elif status_filter in ['active', 'draft', 'closed']:
         jobs = jobs.filter(status=status_filter)
     
     jobs = jobs.order_by('-created_at')
