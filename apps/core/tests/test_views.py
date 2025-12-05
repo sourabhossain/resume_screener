@@ -41,6 +41,22 @@ class TestDashboardView:
         assert 'active_jobs' in response.context
         assert 'total_resumes' in response.context
 
+    def test_dashboard_stats_deleted_job_resumes(self, authenticated_client, sample_job, sample_resume):
+        """Test dashboard counts exclude resumes from deleted jobs."""
+        # Initial check
+        response = authenticated_client.get(reverse('core:dashboard'))
+        assert response.context['total_resumes'] == 1
+        
+        # Soft delete the job
+        sample_job.soft_delete()
+        
+        # Check again - currently this will fail if my hypothesis is correct (it will still be 1)
+        response = authenticated_client.get(reverse('core:dashboard'))
+        
+        # We EXPECT resumes from deleted jobs to be excluded? 
+        # Usually yes. If the job is deleted, we shouldn't count its resumes as "active" in the system overview.
+        assert response.context['total_resumes'] == 0
+
 
 @pytest.mark.django_db
 class TestJobViews:

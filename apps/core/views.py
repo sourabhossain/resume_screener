@@ -33,11 +33,15 @@ def dashboard(request):
     """Dashboard with overview statistics."""
     total_jobs = Job.objects.count()
     active_jobs = Job.objects.filter(status='active').count()
-    total_resumes = Resume.objects.count()
-    avg_score = Resume.objects.filter(final_score__isnull=False).aggregate(Avg('final_score'))['final_score__avg'] or 0
+    
+    # Filter out resumes from deleted jobs
+    active_resumes_qs = Resume.objects.filter(job__is_deleted=False)
+    
+    total_resumes = active_resumes_qs.count()
+    avg_score = active_resumes_qs.filter(final_score__isnull=False).aggregate(Avg('final_score'))['final_score__avg'] or 0
     
     recent_jobs = Job.objects.all()[:5]
-    recent_resumes = Resume.objects.select_related('job')[:5]
+    recent_resumes = active_resumes_qs.select_related('job')[:5]
     
     context = {
         'total_jobs': total_jobs,
