@@ -5,7 +5,7 @@ from django.db.models import Count, Avg
 from django.http import JsonResponse
 from django.db import connection
 from .models import Job, Resume
-from .forms import JobForm, ResumeForm
+from .forms import JobForm, ResumeForm, ResumeEditForm
 
 
 def health_check(request):
@@ -207,14 +207,14 @@ def resume_create(request, job_pk):
                             resume.skills = result.get('skills', [])
                             resume.education = result.get('education', [])
                             resume.certifications = result.get('certifications', [])
-                            resume.experience_years = result.get('experience_years', 0)
+                            resume.experience_years = round(result.get('experience_years', 0), 1)
                             resume.matched_skills = result.get('matched_skills', [])
                             resume.missing_skills = result.get('missing_skills', [])
-                            resume.skills_score = result.get('skill_score', 0)
-                            resume.experience_score = result.get('experience_score', 0)
-                            resume.education_score = result.get('education_score', 0)
-                            resume.certification_score = result.get('certification_score', 0)
-                            resume.final_score = result.get('final_score', 0)
+                            resume.skills_score = round(result.get('skill_score', 0), 1)
+                            resume.experience_score = round(result.get('experience_score', 0), 1)
+                            resume.education_score = round(result.get('education_score', 0), 1)
+                            resume.certification_score = round(result.get('certification_score', 0), 1)
+                            resume.final_score = round(result.get('final_score', 0), 1)
                             resume.tier = result.get('tier', '').lower()
                             resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
                             resume.reasoning = result.get('reasoning', '')
@@ -247,17 +247,17 @@ def resume_detail(request, pk):
 
 @login_required
 def resume_edit(request, pk):
-    """Edit an existing resume."""
+    """Edit an existing resume with full control over AI-generated fields."""
     resume = get_object_or_404(Resume, pk=pk)
     if request.method == 'POST':
-        form = ResumeForm(request.POST, request.FILES, instance=resume)
+        form = ResumeEditForm(request.POST, request.FILES, instance=resume)
         if form.is_valid():
             form.save()
             messages.success(request, 'Resume updated successfully!')
             return redirect('core:resume_detail', pk=pk)
     else:
-        form = ResumeForm(instance=resume)
-    return render(request, 'core/resume_form.html', {'form': form, 'job': resume.job, 'title': 'Edit Resume', 'resume': resume})
+        form = ResumeEditForm(instance=resume)
+    return render(request, 'core/resume_edit_form.html', {'form': form, 'job': resume.job, 'title': 'Edit Resume', 'resume': resume})
 
 
 @login_required
@@ -307,14 +307,14 @@ def resume_rescreen(request, pk):
             resume.skills = result.get('skills', [])
             resume.education = result.get('education', [])
             resume.certifications = result.get('certifications', [])
-            resume.experience_years = result.get('experience_years', 0)
+            resume.experience_years = round(result.get('experience_years', 0), 1)
             resume.matched_skills = result.get('matched_skills', [])
             resume.missing_skills = result.get('missing_skills', [])
-            resume.skills_score = result.get('skill_score', 0)
-            resume.experience_score = result.get('experience_score', 0)
-            resume.education_score = result.get('education_score', 0)
-            resume.certification_score = result.get('certification_score', 0)
-            resume.final_score = result.get('final_score', 0)
+            resume.skills_score = round(result.get('skill_score', 0), 1)
+            resume.experience_score = round(result.get('experience_score', 0), 1)
+            resume.education_score = round(result.get('education_score', 0), 1)
+            resume.certification_score = round(result.get('certification_score', 0), 1)
+            resume.final_score = round(result.get('final_score', 0), 1)
             resume.tier = result.get('tier', '').lower()
             resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
             resume.reasoning = result.get('reasoning', '')

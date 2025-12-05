@@ -64,26 +64,37 @@ class ResumeScreeningState(TypedDict):
 
 
 # Prompts
-EXTRACTION_PROMPT = """Extract information from this resume:
+EXTRACTION_PROMPT = """You are an expert resume parser. Extract information from this resume:
 
 {resume_text}
 
+IMPORTANT INSTRUCTIONS:
+1. Calculate experience_years by looking at ALL work history entries and summing up the durations:
+   - Look for date patterns like "2018-2020", "Jan 2020 - Dec 2022", "2023-present", "2025-ongoing"
+   - For each job, calculate (end_year - start_year). If ongoing/present, use 2025 as end year.
+   - Sum all job durations to get total experience_years
+   - Example: "2018-2020" = 2 years, "2023-2024" = 1 year, "2025-ongoing" = 1 year → Total = 4 years
+
+2. Extract ALL skills including:
+   - Technical skills (programming languages, frameworks, tools)
+   - Soft skills (communication, leadership, problem-solving)
+   - Domain expertise (marketing, sales, teaching, etc.)
+
+3. Extract education with degree names and institutions
+
 Return ONLY valid JSON with this exact structure:
 {{
-    "candidate_name": "Full Name",
-    "skills": ["skill1", "skill2", ...],
+    "candidate_name": "Full Name from resume",
+    "skills": ["skill1", "skill2", "skill3", ...],
     "experience_years": 0.0,
-    "education": ["degree1", "degree2", ...],
+    "education": ["Bachelor of Science in Computer Science - University Name", ...],
     "certifications": ["cert1", "cert2", ...]
 }}
 
-Be thorough in extracting ALL skills mentioned, including technical skills, tools, and frameworks.
-Calculate total years of experience from work history.
-List all educational qualifications.
-List all certifications and courses."""
+Be thorough and accurate. The experience_years calculation is critical."""
 
 
-MATCHING_PROMPT = """Compare this candidate against the job requirements:
+MATCHING_PROMPT = """You are an expert HR analyst. Compare this candidate against the job requirements:
 
 JOB REQUIREMENTS:
 {job_description}
@@ -91,9 +102,26 @@ JOB REQUIREMENTS:
 CANDIDATE PROFILE:
 - Name: {candidate_name}
 - Skills: {skills}
-- Experience: {experience_years} years
+- Total Work Experience: {experience_years} years
 - Education: {education}
 - Certifications: {certifications}
+
+SCORING INSTRUCTIONS:
+1. matched_skills: Skills the candidate has that are mentioned or relevant to the job
+2. missing_skills: Critical skills required by the job that the candidate lacks
+3. experience_match_score (0-100):
+   - 100: Meets or exceeds required years AND has relevant domain experience
+   - 80: Meets required years but different domain (transferable experience)
+   - 60: Slightly less than required years but with relevant experience
+   - 40: Has some work experience but significantly less than required
+   - 20: Entry-level with minimal experience
+   - 0: No work experience at all
+4. education_match_score (0-100):
+   - 100: Exact degree match or higher qualification
+   - 80: Related field degree
+   - 60: Different field but relevant qualifications
+   - 40: Some education but not matching requirements
+   - 20: Minimal formal education
 
 Return ONLY valid JSON with this exact structure:
 {{
@@ -103,8 +131,7 @@ Return ONLY valid JSON with this exact structure:
     "education_match_score": 0.0
 }}
 
-experience_match_score: 0-100 based on how well experience matches requirements.
-education_match_score: 0-100 based on how well education matches requirements."""
+Be fair in evaluation. Consider that experience in different domains still has value."""
 
 
 REASONING_PROMPT = """Based on this screening analysis, provide a brief recommendation:

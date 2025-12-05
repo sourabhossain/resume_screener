@@ -177,9 +177,9 @@
                         {% endif %}
                     </td>
                     <td class="px-6 py-5">
-                        <div class="flex gap-4 text-sm text-gray-500 dark:text-gray-400">
-                            {% if resume.experience_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span>Exp: {{ resume.experience_score|floatformat:0 }}</span>{% endif %}
-                            {% if resume.education_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span>Edu: {{ resume.education_score|floatformat:0 }}</span>{% endif %}
+                        <div class="flex flex-wrap gap-3 text-sm text-gray-500 dark:text-gray-400">
+                            {% if resume.experience_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-400"></span>Experience: {{ resume.experience_score|floatformat:0 }}</span>{% endif %}
+                            {% if resume.education_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-400"></span>Education: {{ resume.education_score|floatformat:0 }}</span>{% endif %}
                             {% if resume.skills_score %}<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400"></span>Skills: {{ resume.skills_score|floatformat:0 }}</span>{% endif %}
                         </div>
                     </td>

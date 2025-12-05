@@ -40,7 +40,56 @@ class JobForm(forms.ModelForm):
 
 
 class ResumeForm(forms.ModelForm):
-    """Form for creating and editing resumes."""
+    """Form for creating and editing resumes - only name and file required, AI handles the rest."""
+    
+    class Meta:
+        model = Resume
+        fields = ['candidate_name', 'file']
+        widgets = {
+            'candidate_name': forms.TextInput(attrs={
+                'class': 'form-input',
+                'placeholder': 'Enter candidate full name'
+            }),
+            'file': forms.FileInput(attrs={
+                'class': 'form-input-file',
+                'accept': '.pdf,.doc,.docx'
+            }),
+        }
+        labels = {
+            'candidate_name': 'Candidate Name',
+            'file': 'Resume File',
+        }
+    
+    def clean_file(self):
+        """Validate file type and size."""
+        file = self.cleaned_data.get('file')
+        if file:
+            # Check file size (max 5MB)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if file.size > max_size:
+                raise forms.ValidationError('File size must be under 5MB.')
+            
+            # Check file type
+            allowed_extensions = ['pdf', 'doc', 'docx']
+            ext = file.name.split('.')[-1].lower()
+            if ext not in allowed_extensions:
+                raise forms.ValidationError(
+                    f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
+                )
+        return file
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if self.cleaned_data.get('file'):
+            instance.file_name = self.cleaned_data['file'].name
+            instance.file_type = self.cleaned_data['file'].name.split('.')[-1].lower()
+        if commit:
+            instance.save()
+        return instance
+
+
+class ResumeEditForm(forms.ModelForm):
+    """Form for editing resumes - includes AI-generated fields that can be manually adjusted."""
     
     class Meta:
         model = Resume
@@ -82,17 +131,25 @@ class ResumeForm(forms.ModelForm):
                 'placeholder': '0-100'
             }),
         }
+        labels = {
+            'candidate_name': 'Candidate Name',
+            'file': 'Resume File',
+            'tier': 'Tier',
+            'recommendation': 'Decision',
+            'experience_score': 'Experience Score',
+            'education_score': 'Education Score',
+            'skills_score': 'Skills Score',
+            'final_score': 'Final Score',
+        }
     
     def clean_file(self):
         """Validate file type and size."""
         file = self.cleaned_data.get('file')
         if file:
-            # Check file size (max 5MB)
-            max_size = 5 * 1024 * 1024  # 5MB
+            max_size = 5 * 1024 * 1024
             if file.size > max_size:
                 raise forms.ValidationError('File size must be under 5MB.')
             
-            # Check file type
             allowed_extensions = ['pdf', 'doc', 'docx']
             ext = file.name.split('.')[-1].lower()
             if ext not in allowed_extensions:
