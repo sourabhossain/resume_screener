@@ -58,6 +58,11 @@ class Job(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
     file_type = models.CharField(max_length=50, blank=True)
     
+    # AI Matching Fields
+    required_skills = models.JSONField(default=list, blank=True, help_text="Required skills for matching")
+    required_experience = models.FloatField(null=True, blank=True, help_text="Required years of experience")
+    required_education = models.JSONField(default=list, blank=True, help_text="Required education levels")
+    
     class Meta:
         db_table = 'job_description'
         ordering = ['-created_at']
@@ -106,6 +111,26 @@ class Resume(SoftDeleteModel):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     file_type = models.CharField(max_length=50, blank=True)
+    
+    # AI Screening Fields
+    skills = models.JSONField(default=list, blank=True, help_text="Extracted skills from resume")
+    education = models.JSONField(default=list, blank=True, help_text="Extracted education")
+    certifications = models.JSONField(default=list, blank=True, help_text="Extracted certifications")
+    experience_years = models.FloatField(null=True, blank=True, help_text="Total years of experience")
+    certification_score = models.FloatField(null=True, blank=True)
+    reasoning = models.TextField(blank=True, help_text="AI reasoning for recommendation")
+    
+    SCREENING_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    screening_status = models.CharField(
+        max_length=20, 
+        choices=SCREENING_STATUS_CHOICES, 
+        default='pending'
+    )
     
     class Meta:
         db_table = 'resumes'

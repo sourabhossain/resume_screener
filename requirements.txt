@@ -15,3 +15,17 @@ djangorestframework>=3.14
 
 # Security
 django-ratelimit>=4.1
+
+# AI/NLP
+langgraph>=0.2
+langchain>=0.3
+langchain-openai>=0.2
+openai>=1.0
+PyPDF2>=3.0
+python-docx>=1.0
+pydantic>=2.0
+tenacity>=8.0
+
+# Async Tasks
+celery>=5.3
+redis>=5.0

@@ -172,3 +172,31 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+
+# OpenAI Configuration
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+OPENAI_MODEL = 'gpt-4o'
+
+
+# AI Screening Configuration
+AI_SCREENING_CONFIG = {
+    'SKILL_WEIGHT': 0.40,
+    'EXPERIENCE_WEIGHT': 0.30,
+    'EDUCATION_WEIGHT': 0.20,
+    'CERTIFICATION_WEIGHT': 0.10,
+    'TOP_TIER_THRESHOLD': 80,
+    'MID_TIER_THRESHOLD': 60,
+    'MAX_RESUME_CHARS': 4000,
+    'MAX_JOB_DESC_CHARS': 3000,
+}
+

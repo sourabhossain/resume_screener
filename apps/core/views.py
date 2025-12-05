@@ -40,6 +40,15 @@ def dashboard(request):
     total_resumes = active_resumes_qs.count()
     avg_score = active_resumes_qs.filter(final_score__isnull=False).aggregate(Avg('final_score'))['final_score__avg'] or 0
     
+    # Tier distribution
+    top_tier = active_resumes_qs.filter(tier='top').count()
+    mid_tier = active_resumes_qs.filter(tier='mid').count()
+    low_tier = active_resumes_qs.filter(tier='low').count()
+    
+    # Screening status
+    pending_screening = active_resumes_qs.filter(screening_status='pending').count()
+    processing_screening = active_resumes_qs.filter(screening_status='processing').count()
+    
     recent_jobs = Job.objects.all()[:5]
     recent_resumes = active_resumes_qs.select_related('job')[:5]
     
@@ -50,6 +59,13 @@ def dashboard(request):
         'avg_score': round(avg_score, 1),
         'recent_jobs': recent_jobs,
         'recent_resumes': recent_resumes,
+        # Tier distribution
+        'top_tier': top_tier,
+        'mid_tier': mid_tier,
+        'low_tier': low_tier,
+        # Screening status
+        'pending_screening': pending_screening,
+        'processing_screening': processing_screening,
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -161,8 +177,61 @@ def resume_create(request, job_pk):
         if form.is_valid():
             resume = form.save(commit=False)
             resume.job = job
+            resume.screening_status = 'pending'
             resume.save()
-            messages.success(request, 'Resume added successfully!')
+            
+            # Trigger AI screening task
+            try:
+                from apps.core.tasks import screen_resume_task
+                screen_resume_task.delay(resume.id)
+                messages.success(request, 'Resume added! AI screening started in background.')
+            except Exception as e:
+                # Celery/Redis not available - run synchronous screening
+                try:
+                    from apps.core.services.document_extractor import DocumentExtractor
+                    from apps.core.services.ai_screener import screen_resume
+                    
+                    # Extract text from resume
+                    if resume.file:
+                        resume.raw_text = DocumentExtractor.extract(resume.file.path)
+                        resume.save(update_fields=['raw_text'])
+                    
+                    # Run AI screening synchronously
+                    if resume.raw_text and job.description:
+                        resume.screening_status = 'processing'
+                        resume.save(update_fields=['screening_status'])
+                        
+                        result = screen_resume(resume.raw_text, job.description)
+                        
+                        if not result.get('error'):
+                            resume.skills = result.get('skills', [])
+                            resume.education = result.get('education', [])
+                            resume.certifications = result.get('certifications', [])
+                            resume.experience_years = result.get('experience_years', 0)
+                            resume.matched_skills = result.get('matched_skills', [])
+                            resume.missing_skills = result.get('missing_skills', [])
+                            resume.skills_score = result.get('skill_score', 0)
+                            resume.experience_score = result.get('experience_score', 0)
+                            resume.education_score = result.get('education_score', 0)
+                            resume.certification_score = result.get('certification_score', 0)
+                            resume.final_score = result.get('final_score', 0)
+                            resume.tier = result.get('tier', '').lower()
+                            resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
+                            resume.reasoning = result.get('reasoning', '')
+                            resume.screening_status = 'completed'
+                            resume.save()
+                            messages.success(request, 'Resume added and AI screening completed!')
+                        else:
+                            resume.screening_status = 'failed'
+                            resume.save(update_fields=['screening_status'])
+                            messages.warning(request, f'Resume added but screening failed: {result.get("error")}')
+                    else:
+                        messages.success(request, 'Resume added successfully!')
+                except Exception as sync_error:
+                    import logging
+                    logging.getLogger(__name__).error(f"Sync screening failed: {sync_error}")
+                    messages.success(request, 'Resume added successfully!')
+            
             return redirect('core:job_detail', pk=job_pk)
     else:
         form = ResumeForm()
@@ -201,3 +270,67 @@ def resume_delete(request, pk):
         messages.success(request, f'Resume for "{resume.candidate_name}" deleted successfully!')
         return redirect('core:job_detail', pk=job_pk)
     return render(request, 'core/confirm_delete.html', {'object': resume, 'type': 'resume', 'job_pk': job_pk})
+
+
+@login_required
+def resume_rescreen(request, pk):
+    """Manually trigger AI screening for a resume."""
+    resume = get_object_or_404(Resume, pk=pk)
+    
+    if request.method != 'POST':
+        return redirect('core:resume_detail', pk=pk)
+    
+    try:
+        from apps.core.services.document_extractor import DocumentExtractor
+        from apps.core.services.ai_screener import screen_resume
+        
+        # Extract text if not already done
+        if not resume.raw_text and resume.file:
+            resume.raw_text = DocumentExtractor.extract(resume.file.path)
+            resume.save(update_fields=['raw_text'])
+        
+        if not resume.raw_text:
+            messages.error(request, 'No resume text available for screening.')
+            return redirect('core:resume_detail', pk=pk)
+        
+        if not resume.job.description:
+            messages.error(request, 'Job description is required for screening.')
+            return redirect('core:resume_detail', pk=pk)
+        
+        # Run AI screening
+        resume.screening_status = 'processing'
+        resume.save(update_fields=['screening_status'])
+        
+        result = screen_resume(resume.raw_text, resume.job.description)
+        
+        if not result.get('error'):
+            resume.skills = result.get('skills', [])
+            resume.education = result.get('education', [])
+            resume.certifications = result.get('certifications', [])
+            resume.experience_years = result.get('experience_years', 0)
+            resume.matched_skills = result.get('matched_skills', [])
+            resume.missing_skills = result.get('missing_skills', [])
+            resume.skills_score = result.get('skill_score', 0)
+            resume.experience_score = result.get('experience_score', 0)
+            resume.education_score = result.get('education_score', 0)
+            resume.certification_score = result.get('certification_score', 0)
+            resume.final_score = result.get('final_score', 0)
+            resume.tier = result.get('tier', '').lower()
+            resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
+            resume.reasoning = result.get('reasoning', '')
+            resume.screening_status = 'completed'
+            resume.save()
+            messages.success(request, f'AI screening completed! Score: {resume.final_score:.0f}%')
+        else:
+            resume.screening_status = 'failed'
+            resume.save(update_fields=['screening_status'])
+            messages.error(request, f'Screening failed: {result.get("error")}')
+            
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Re-screening failed: {e}")
+        resume.screening_status = 'failed'
+        resume.save(update_fields=['screening_status'])
+        messages.error(request, f'Screening failed: {str(e)}')
+    
+    return redirect('core:resume_detail', pk=pk)

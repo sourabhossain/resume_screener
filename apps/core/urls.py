@@ -23,4 +23,5 @@ urlpatterns = [
     path('resumes/<int:pk>/', views.resume_detail, name='resume_detail'),
     path('resumes/<int:pk>/edit/', views.resume_edit, name='resume_edit'),
     path('resumes/<int:pk>/delete/', views.resume_delete, name='resume_delete'),
+    path('resumes/<int:pk>/rescreen/', views.resume_rescreen, name='resume_rescreen'),
 ]

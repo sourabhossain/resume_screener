@@ -98,6 +98,49 @@
     </div>
 </div>
 
+<!-- Tier Distribution -->
+<div class="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-dark-700 mb-12 animate-fade-in" style="animation-delay: 0.45s">
+    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+        Candidate Tier Distribution
+    </h2>
+    <div class="grid grid-cols-3 gap-4">
+        <div class="text-center p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800">
+            <p class="text-3xl font-black text-emerald-600">{{ top_tier }}</p>
+            <p class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 mt-1">Top Tier</p>
+            <p class="text-xs text-emerald-600/70 dark:text-emerald-500">≥80% Score</p>
+        </div>
+        <div class="text-center p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
+            <p class="text-3xl font-black text-amber-600">{{ mid_tier }}</p>
+            <p class="text-sm font-semibold text-amber-700 dark:text-amber-400 mt-1">Mid Tier</p>
+            <p class="text-xs text-amber-600/70 dark:text-amber-500">60-79% Score</p>
+        </div>
+        <div class="text-center p-4 rounded-xl bg-gray-50 dark:bg-dark-700 border border-gray-200 dark:border-dark-600">
+            <p class="text-3xl font-black text-gray-600 dark:text-gray-400">{{ low_tier }}</p>
+            <p class="text-sm font-semibold text-gray-600 dark:text-gray-400 mt-1">Low Tier</p>
+            <p class="text-xs text-gray-500">< 60% Score</p>
+        </div>
+    </div>
+    {% if pending_screening > 0 or processing_screening > 0 %}
+    <div class="mt-4 flex items-center gap-4 text-sm">
+        {% if processing_screening > 0 %}
+        <span class="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            {{ processing_screening }} screening in progress
+        </span>
+        {% endif %}
+        {% if pending_screening > 0 %}
+        <span class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+            {{ pending_screening }} pending
+        </span>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-gray-100 dark:border-dark-700 overflow-hidden animate-fade-in" style="animation-delay: 0.5s">
         <div class="px-6 py-5 border-b border-gray-100 dark:border-dark-700 flex justify-between items-center bg-gradient-to-r from-blue-50/50 dark:from-blue-900/20 to-transparent">
