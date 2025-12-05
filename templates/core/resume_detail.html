@@ -3,7 +3,7 @@
 {% block title %}{{ resume.candidate_name }} - ResumeAI{% endblock %}
 
 {% block content %}
-<!-- Header -->
+
 <div class="mb-8">
     <nav class="flex items-center text-sm text-gray-500 mb-6">
         <a href="{% url 'core:job_list' %}" class="hover:text-primary-600 transition">Jobs</a>
@@ -50,9 +50,9 @@
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Main Content -->
+
     <div class="lg:col-span-2 space-y-8">
-        <!-- Status Cards -->
+
         <div class="grid grid-cols-3 gap-4">
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center">
                 <p class="text-sm font-medium text-gray-500 mb-2">Final Score</p>
@@ -92,7 +92,7 @@
             </div>
         </div>
         
-        <!-- Score Breakdown -->
+
         <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
             <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@
             </div>
         </div>
         
-        <!-- Raw Text -->
+
         {% if resume.raw_text %}
         <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Extracted Resume Text</h2>
@@ -140,9 +140,9 @@
         {% endif %}
     </div>
     
-    <!-- Sidebar -->
+
     <div class="space-y-6">
-        <!-- Skills Analysis -->
+
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h2 class="text-lg font-bold text-gray-900 mb-4">Skills Analysis</h2>
             
@@ -179,7 +179,7 @@
             {% endif %}
         </div>
         
-        <!-- File Info -->
+
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h2 class="text-lg font-bold text-gray-900 mb-4">Details</h2>
             <dl class="space-y-4 text-sm">

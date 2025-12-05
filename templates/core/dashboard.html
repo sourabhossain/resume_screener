@@ -2,18 +2,20 @@
 
 {% block title %}Dashboard - ResumeAI{% endblock %}
 
+{% block nav_action %}{% endblock %}
+
 {% block content %}
-<!-- Hero Section -->
+
 <div class="mb-12">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">
+        <div class="animate-fade-in">
+            <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-3">
                 Welcome to <span class="gradient-text">ResumeAI</span>
             </h1>
-            <p class="text-lg text-gray-500">AI-powered resume screening for smarter hiring decisions</p>
+            <p class="text-lg text-gray-500 max-w-xl">AI-powered resume screening for smarter hiring decisions</p>
         </div>
-        <a href="{% url 'core:job_create' %}" class="btn-primary text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 shadow-xl self-start">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{% url 'core:job_create' %}" class="btn-primary text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl hover:shadow-2xl self-start group transition-all duration-300">
+            <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
             <span>Create New Job</span>
@@ -21,16 +23,19 @@
     </div>
 </div>
 
-<!-- Stats Cards -->
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
+    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in group" style="animation-delay: 0.1s">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Jobs</p>
-                <p class="text-4xl font-bold text-gray-900">{{ total_jobs }}</p>
-                <p class="text-xs text-gray-400 mt-2">All time postings</p>
+                <p class="text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Total Jobs</p>
+                <p class="text-4xl font-black text-gray-900">{{ total_jobs }}</p>
+                <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                    All time postings
+                </p>
             </div>
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-blue-500/40 transition-all duration-300">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                 </svg>
@@ -38,14 +43,17 @@
         </div>
     </div>
     
-    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
+    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in group" style="animation-delay: 0.2s">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Active Jobs</p>
-                <p class="text-4xl font-bold text-emerald-600">{{ active_jobs }}</p>
-                <p class="text-xs text-gray-400 mt-2">Currently hiring</p>
+                <p class="text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Active Jobs</p>
+                <p class="text-4xl font-black text-emerald-600">{{ active_jobs }}</p>
+                <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Currently hiring
+                </p>
             </div>
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-emerald-500/40 transition-all duration-300">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
@@ -53,14 +61,17 @@
         </div>
     </div>
     
-    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
+    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in group" style="animation-delay: 0.3s">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Total Candidates</p>
-                <p class="text-4xl font-bold text-gray-900">{{ total_resumes }}</p>
-                <p class="text-xs text-gray-400 mt-2">Resumes screened</p>
+                <p class="text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Total Candidates</p>
+                <p class="text-4xl font-black text-gray-900">{{ total_resumes }}</p>
+                <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+                    Resumes screened
+                </p>
             </div>
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-violet-500/40 transition-all duration-300">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                 </svg>
@@ -68,14 +79,17 @@
         </div>
     </div>
     
-    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover">
+    <div class="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover animate-fade-in group" style="animation-delay: 0.4s">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-gray-500 mb-1">Avg. Score</p>
-                <p class="text-4xl font-bold gradient-text">{{ avg_score }}%</p>
-                <p class="text-xs text-gray-400 mt-2">Candidate quality</p>
+                <p class="text-sm font-semibold text-gray-500 mb-1 uppercase tracking-wide">Avg. Score</p>
+                <p class="text-4xl font-black gradient-text">{{ avg_score }}%</p>
+                <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    Candidate quality
+                </p>
             </div>
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-amber-500/40 transition-all duration-300">
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                 </svg>
@@ -84,16 +98,17 @@
     </div>
 </div>
 
-<!-- Two Column Layout -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <!-- Recent Jobs -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in" style="animation-delay: 0.5s">
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-transparent">
             <div>
-                <h2 class="text-xl font-bold text-gray-900">Recent Jobs</h2>
+                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    Recent Jobs
+                </h2>
                 <p class="text-sm text-gray-500 mt-0.5">Latest job postings</p>
             </div>
-            <a href="{% url 'core:job_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-semibold flex items-center gap-1 group">
+            <a href="{% url 'core:job_list' %}" class="text-primary-600 hover:text-primary-700 text-sm font-semibold flex items-center gap-1 group px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-all">
                 View All 
                 <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -102,10 +117,10 @@
         </div>
         <div class="divide-y divide-gray-50">
             {% for job in recent_jobs %}
-            <a href="{% url 'core:job_detail' job.pk %}" class="block px-6 py-4 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-transparent transition-all duration-300">
+            <a href="{% url 'core:job_detail' job.pk %}" class="block px-6 py-4 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-transparent transition-all duration-300 group">
                 <div class="flex justify-between items-start">
                     <div class="flex-1 min-w-0">
-                        <h3 class="font-semibold text-gray-900 truncate">{{ job.title }}</h3>
+                        <h3 class="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors">{{ job.title }}</h3>
                         <p class="text-sm text-gray-500 mt-1 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -113,7 +128,7 @@
                             {{ job.resumes.count }} candidates
                         </p>
                     </div>
-                    <span class="ml-4 px-3 py-1.5 text-xs font-semibold rounded-full shrink-0
+                    <span class="ml-4 px-3 py-1.5 text-xs font-bold rounded-full shrink-0
                         {% if job.status == 'active' %}bg-emerald-100 text-emerald-700
                         {% elif job.status == 'draft' %}bg-amber-100 text-amber-700
                         {% else %}bg-gray-100 text-gray-600{% endif %}">
@@ -123,40 +138,48 @@
             </a>
             {% empty %}
             <div class="px-6 py-12 text-center">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                     <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
                 </div>
-                <p class="text-gray-500">No jobs yet.</p>
-                <a href="{% url 'core:job_create' %}" class="text-primary-600 font-semibold hover:underline mt-2 inline-block">Create your first job →</a>
+                <p class="text-gray-500 mb-2">No jobs yet.</p>
+                <a href="{% url 'core:job_create' %}" class="inline-flex items-center gap-1 text-primary-600 font-semibold hover:underline">
+                    Create your first job
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
             </div>
             {% endfor %}
         </div>
     </div>
     
-    <!-- Recent Candidates -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="px-6 py-5 border-b border-gray-100">
-            <h2 class="text-xl font-bold text-gray-900">Recent Candidates</h2>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in" style="animation-delay: 0.6s">
+        <div class="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-violet-50/50 to-transparent">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-violet-500"></span>
+                Recent Candidates
+            </h2>
             <p class="text-sm text-gray-500 mt-0.5">Latest resume submissions</p>
         </div>
         <div class="divide-y divide-gray-50">
             {% for resume in recent_resumes %}
-            <a href="{% url 'core:resume_detail' resume.pk %}" class="block px-6 py-4 hover:bg-gradient-to-r hover:from-violet-50/50 hover:to-transparent transition-all duration-300">
+            <a href="{% url 'core:resume_detail' resume.pk %}" class="block px-6 py-4 hover:bg-gradient-to-r hover:from-violet-50/50 hover:to-transparent transition-all duration-300 group">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-violet-500/20">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-violet-500/20 group-hover:scale-110 transition-transform duration-300">
                             {{ resume.candidate_name|slice:":1"|upper }}
                         </div>
                         <div>
-                            <h3 class="font-semibold text-gray-900">{{ resume.candidate_name }}</h3>
+                            <h3 class="font-semibold text-gray-900 group-hover:text-violet-600 transition-colors">{{ resume.candidate_name }}</h3>
                             <p class="text-sm text-gray-500">{{ resume.job.title|truncatechars:30 }}</p>
                         </div>
                     </div>
                     <div class="text-right">
                         {% if resume.final_score %}
-                        <span class="text-2xl font-bold 
+                        <span class="text-2xl font-black 
                             {% if resume.final_score >= 80 %}text-emerald-600
                             {% elif resume.final_score >= 60 %}text-amber-500
                             {% else %}text-red-500{% endif %}">
@@ -164,7 +187,7 @@
                         </span>
                         {% endif %}
                         {% if resume.tier %}
-                        <span class="block text-xs px-2.5 py-1 rounded-full mt-1
+                        <span class="block text-xs px-2.5 py-1 rounded-full mt-1 font-bold
                             {% if resume.tier == 'top' %}bg-emerald-100 text-emerald-700
                             {% elif resume.tier == 'mid' %}bg-amber-100 text-amber-700
                             {% else %}bg-gray-100 text-gray-600{% endif %}">
@@ -176,8 +199,8 @@
             </a>
             {% empty %}
             <div class="px-6 py-12 text-center">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                 </div>

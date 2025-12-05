@@ -37,9 +37,9 @@ def job_create(request):
     if request.method == 'POST':
         form = JobForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            job = form.save()
             messages.success(request, 'Job created successfully!')
-            return redirect('core:job_list')
+            return redirect('core:job_detail', pk=job.pk)
     else:
         form = JobForm()
     return render(request, 'core/job_form.html', {'form': form, 'title': 'Post New Job'})
@@ -80,6 +80,13 @@ def job_delete(request, pk):
 def resume_create(request, job_pk):
     """Create a new resume for a job."""
     job = get_object_or_404(Job, pk=job_pk)
+    
+    # Only allow resume creation for active jobs
+    if job.status != 'active':
+        status_label = 'Draft' if job.status == 'draft' else 'Closed'
+        messages.error(request, f'Cannot add resume. This job is currently {status_label}.')
+        return redirect('core:job_detail', pk=job_pk)
+    
     if request.method == 'POST':
         form = ResumeForm(request.POST, request.FILES)
         if form.is_valid():

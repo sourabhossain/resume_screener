@@ -110,12 +110,19 @@
             border-color: #0ea5e9;
             background: #f0f9ff;
         }
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
         }
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-pulse-soft {
+            animation: pulseSoft 2s ease-in-out infinite;
+        }
+        @keyframes pulseSoft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
         .nav-link {
             position: relative;
@@ -126,10 +133,6 @@
         }
         .nav-link:hover {
             background: linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-            color: #0ea5e9;
-        }
-        .nav-link.active {
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
             color: #0ea5e9;
         }
         .stat-card {
@@ -150,7 +153,7 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-white to-sky-50 min-h-screen">
-    <!-- Navigation -->
+
     <nav class="glass sticky top-0 z-50 border-b border-gray-100/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-18 py-3">
@@ -184,6 +187,7 @@
                         </a>
                     </div>
                 </div>
+                {% block nav_action %}
                 <div class="flex items-center gap-4">
                     <a href="{% url 'core:job_create' %}" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,11 +196,11 @@
                         <span>Post Job</span>
                     </a>
                 </div>
+                {% endblock %}
             </div>
         </div>
     </nav>
 
-    <!-- Messages -->
     {% if messages %}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {% for message in messages %}
@@ -205,6 +209,10 @@
             <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
+            {% elif message.tags == 'error' %}
+            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
             {% endif %}
             <span class="font-medium">{{ message }}</span>
         </div>
@@ -212,13 +220,11 @@
     </div>
     {% endif %}
 
-    <!-- Main Content -->
     <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="border-t border-gray-100 mt-auto py-8 bg-white/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -234,5 +240,6 @@
             </div>
         </div>
     </footer>
+
 </body>
 </html>

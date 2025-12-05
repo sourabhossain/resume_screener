@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
-    <!-- Breadcrumb -->
+
     <nav class="flex items-center text-sm text-gray-500 mb-8">
         <a href="{% url 'core:job_list' %}" class="hover:text-primary-600 transition">Jobs</a>
         <svg class="w-4 h-4 mx-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,9 +17,9 @@
         <span class="text-gray-900 font-medium">{{ title }}</span>
     </nav>
     
-    <!-- Form Card -->
+
     <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
-        <!-- Header -->
+
         <div class="px-8 py-6 bg-gradient-to-r from-violet-500/5 to-purple-500/5 border-b border-gray-100">
             <div class="flex items-center gap-4">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
@@ -38,7 +38,7 @@
             {% csrf_token %}
             
             <div class="space-y-8">
-                <!-- Candidate Name -->
+
                 <div>
                     <label for="id_candidate_name" class="block text-sm font-semibold text-gray-700 mb-3">
                         Candidate Name <span class="text-red-500">*</span>
@@ -49,7 +49,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- File Upload -->
+
                 <div>
                     <label for="id_file" class="block text-sm font-semibold text-gray-700 mb-3">
                         Resume File <span class="text-red-500">*</span>
@@ -68,7 +68,7 @@
                     <p class="mt-2 text-xs text-gray-400">Supported: PDF, DOC, DOCX</p>
                 </div>
                 
-                <!-- Classification -->
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="id_tier" class="block text-sm font-semibold text-gray-700 mb-3">
@@ -84,7 +84,7 @@
                     </div>
                 </div>
                 
-                <!-- Scores -->
+
                 <div class="border-t border-gray-100 pt-8">
                     <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +113,7 @@
                 </div>
             </div>
             
-            <!-- Actions -->
+
             <div class="flex justify-end gap-4 mt-10 pt-8 border-t border-gray-100">
                 <a href="{% url 'core:job_detail' job.pk %}" class="px-6 py-3 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-semibold">
                     Cancel

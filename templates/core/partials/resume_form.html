@@ -1,0 +1,86 @@
+<div data-title="{{ title }}">
+    <form method="post" enctype="multipart/form-data" hx-post hx-target="#modal-content" hx-swap="innerHTML">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+            <div>
+                <label for="id_candidate_name" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Candidate Name <span class="text-red-500">*</span>
+                </label>
+                {{ form.candidate_name }}
+                {% if form.candidate_name.errors %}
+                <p class="mt-2 text-sm text-red-600">{{ form.candidate_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <div>
+                <label for="id_file" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Resume File <span class="text-red-500">*</span>
+                </label>
+                {{ form.file }}
+                {% if resume.file %}
+                <p class="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Current: {{ resume.file_name }}
+                </p>
+                {% endif %}
+                <p class="mt-2 text-xs text-gray-400">PDF, DOC, DOCX supported</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="id_tier" class="block text-sm font-semibold text-gray-700 mb-2">Tier</label>
+                    {{ form.tier }}
+                </div>
+                <div>
+                    <label for="id_recommendation" class="block text-sm font-semibold text-gray-700 mb-2">Recommendation</label>
+                    {{ form.recommendation }}
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-100 pt-6">
+                <h3 class="text-sm font-bold text-gray-900 mb-4">Scores (Optional)</h3>
+                <div class="grid grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Experience</label>
+                        {{ form.experience_score }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Education</label>
+                        {{ form.education_score }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Skills</label>
+                        {{ form.skills_score }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Final</label>
+                        {{ form.final_score }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
+            <button type="button" @click="closeModal()" 
+                    class="px-5 py-2.5 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold">
+                Cancel
+            </button>
+            <button type="submit" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg flex items-center gap-2">
+                {% if resume %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Update Resume
+                {% else %}
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Resume
+                {% endif %}
+            </button>
+        </div>
+    </form>
+</div>

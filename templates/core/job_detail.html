@@ -3,7 +3,7 @@
 {% block title %}{{ job.title }} - ResumeAI{% endblock %}
 
 {% block content %}
-<!-- Breadcrumb & Header -->
+
 <div class="mb-8">
     <nav class="flex items-center text-sm text-gray-500 mb-6">
         <a href="{% url 'core:job_list' %}" class="hover:text-primary-600 transition flex items-center gap-1">
@@ -72,7 +72,7 @@
     </div>
 </div>
 
-<!-- Job Description -->
+
 {% if job.description %}
 <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-8">
     <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -85,19 +85,44 @@
 </div>
 {% endif %}
 
-<!-- Candidates Section -->
+
 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="px-8 py-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h2 class="text-xl font-bold text-gray-900">Candidates</h2>
             <p class="text-gray-500 text-sm mt-1">{{ resumes.count }} applicant{{ resumes.count|pluralize }} for this position</p>
         </div>
+        {% if job.status == 'active' %}
         <a href="{% url 'core:resume_create' job.pk %}" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg self-start sm:self-auto">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
             Add Resume
         </a>
+        {% else %}
+
+        <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 px-4 py-2 rounded-xl {% if job.status == 'draft' %}bg-amber-50 border border-amber-200{% else %}bg-gray-100 border border-gray-200{% endif %}">
+                {% if job.status == 'draft' %}
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                <span class="text-sm font-medium text-amber-700">Draft Mode</span>
+                {% else %}
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                <span class="text-sm font-medium text-gray-600">Closed</span>
+                {% endif %}
+            </div>
+            <span class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold bg-gray-100 text-gray-400 cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Resume
+            </span>
+        </div>
+        {% endif %}
     </div>
     
     {% if resumes %}
@@ -197,6 +222,7 @@
             </svg>
         </div>
         <h3 class="text-xl font-bold text-gray-900 mb-2">No candidates yet</h3>
+        {% if job.status == 'active' %}
         <p class="text-gray-500 mb-6">Start screening by adding resumes to this job</p>
         <a href="{% url 'core:resume_create' job.pk %}" class="inline-flex items-center gap-2 btn-primary text-white px-6 py-3 rounded-xl font-semibold shadow-lg">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,6 +230,15 @@
             </svg>
             Add First Resume
         </a>
+        {% else %}
+        <p class="text-gray-500">
+            {% if job.status == 'draft' %}
+            Activate this job to start adding resumes
+            {% else %}
+            This job is closed for new applications
+            {% endif %}
+        </p>
+        {% endif %}
     </div>
     {% endif %}
 </div>
