@@ -149,4 +149,51 @@
     </div>
     {% endfor %}
 </div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="mt-10 flex items-center justify-center gap-2">
+    <!-- Previous -->
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+       class="px-4 py-2 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-all font-medium flex items-center gap-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+        Prev
+    </a>
+    {% endif %}
+    
+    <!-- Page Numbers -->
+    <div class="flex items-center gap-1">
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+               class="px-4 py-2 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-all font-medium">
+                {{ num }}
+            </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    <!-- Next -->
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+       class="px-4 py-2 rounded-xl bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-dark-700 transition-all font-medium flex items-center gap-1">
+        Next
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+    </a>
+    {% endif %}
+</div>
+
+<!-- Page Info -->
+<p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-4">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} 
+    ({{ page_obj.paginator.count }} total jobs)
+</p>
+{% endif %}
 {% endblock %}

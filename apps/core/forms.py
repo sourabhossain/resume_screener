@@ -83,6 +83,24 @@ class ResumeForm(forms.ModelForm):
             }),
         }
     
+    def clean_file(self):
+        """Validate file type and size."""
+        file = self.cleaned_data.get('file')
+        if file:
+            # Check file size (max 5MB)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if file.size > max_size:
+                raise forms.ValidationError('File size must be under 5MB.')
+            
+            # Check file type
+            allowed_extensions = ['pdf', 'doc', 'docx']
+            ext = file.name.split('.')[-1].lower()
+            if ext not in allowed_extensions:
+                raise forms.ValidationError(
+                    f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
+                )
+        return file
+    
     def save(self, commit=True):
         instance = super().save(commit=False)
         if self.cleaned_data.get('file'):

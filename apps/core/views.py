@@ -31,8 +31,9 @@ def dashboard(request):
 
 @login_required
 def job_list(request):
-    """List all jobs with search and filter support."""
+    """List all jobs with search, filter, and pagination support."""
     from django.db.models import Q
+    from django.core.paginator import Paginator
     
     jobs = Job.objects.annotate(resume_count=Count('resumes'))
     
@@ -51,8 +52,14 @@ def job_list(request):
     
     jobs = jobs.order_by('-created_at')
     
+    # Pagination - 10 items per page
+    paginator = Paginator(jobs, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+    
     context = {
-        'jobs': jobs,
+        'jobs': page_obj,
+        'page_obj': page_obj,
         'search_query': search_query,
         'status_filter': status_filter,
     }
