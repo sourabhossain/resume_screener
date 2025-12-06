@@ -1,12 +1,11 @@
 """
-Django REST Framework Serializers for Job and Resume models.
+Django REST Framework Serializers for Job and Resume.
 """
 from rest_framework import serializers
 from .models import Job, Resume
 
 
 class ResumeSerializer(serializers.ModelSerializer):
-    """Serializer for Resume model."""
     tier_display = serializers.CharField(source='get_tier_display', read_only=True)
     recommendation_display = serializers.CharField(source='get_recommendation_display', read_only=True)
     
@@ -23,7 +22,6 @@ class ResumeSerializer(serializers.ModelSerializer):
 
 
 class JobListSerializer(serializers.ModelSerializer):
-    """Serializer for Job list view (lightweight)."""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     resume_count = serializers.IntegerField(read_only=True)
     
@@ -36,7 +34,6 @@ class JobListSerializer(serializers.ModelSerializer):
 
 
 class JobDetailSerializer(serializers.ModelSerializer):
-    """Serializer for Job detail view (includes resumes)."""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     resumes = ResumeSerializer(many=True, read_only=True, source='active_resumes')
     resume_count = serializers.SerializerMethodField()

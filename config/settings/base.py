@@ -178,13 +178,24 @@ REST_FRAMEWORK = {
 
 # DRF Spectacular Configuration (OpenAPI/Swagger)
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Resume Screening System API',
-    'DESCRIPTION': 'AI-powered resume screening API for job applications',
+    'TITLE': 'ResumeAI API',
+    'DESCRIPTION': 'AI-powered resume screening API',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'CAMELIZE_NAMES': False,
+    'TAGS': [
+        {'name': 'Jobs', 'description': 'Job management'},
+        {'name': 'Resumes', 'description': 'Resume screening'},
+    ],
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
         'persistAuthorization': True,
+        'filter': True,
+        'docExpansion': 'list',
+        'tagsSorter': 'alpha',
+        'operationsSorter': 'alpha',
+        'displayOperationId': True,
     },
 }
 
