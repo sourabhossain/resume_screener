@@ -61,7 +61,7 @@ class ResumeForm(forms.ModelForm):
         }
     
     def clean_file(self):
-        """Validate file type and size."""
+        """Validate file type, size, and content (magic byte check)."""
         file = self.cleaned_data.get('file')
         if file:
             # Check file size (max 5MB)
@@ -69,12 +69,29 @@ class ResumeForm(forms.ModelForm):
             if file.size > max_size:
                 raise forms.ValidationError('File size must be under 5MB.')
             
-            # Check file type
+            # Check file extension
             allowed_extensions = ['pdf', 'doc', 'docx']
             ext = file.name.split('.')[-1].lower()
             if ext not in allowed_extensions:
                 raise forms.ValidationError(
                     f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
+                )
+            
+            # Magic byte validation - check file content matches extension
+            file.seek(0)
+            header = file.read(8)
+            file.seek(0)  # Reset file pointer
+            
+            magic_bytes = {
+                'pdf': b'%PDF',
+                'docx': b'PK\x03\x04',  # ZIP format (DOCX is a ZIP)
+                'doc': b'\xd0\xcf\x11\xe0',  # OLE compound document
+            }
+            
+            expected_magic = magic_bytes.get(ext)
+            if expected_magic and not header.startswith(expected_magic):
+                raise forms.ValidationError(
+                    f'File content does not match {ext.upper()} format. Please upload a valid file.'
                 )
         return file
     
@@ -143,7 +160,7 @@ class ResumeEditForm(forms.ModelForm):
         }
     
     def clean_file(self):
-        """Validate file type and size."""
+        """Validate file type, size, and content (magic byte check)."""
         file = self.cleaned_data.get('file')
         if file:
             max_size = 5 * 1024 * 1024
@@ -155,6 +172,23 @@ class ResumeEditForm(forms.ModelForm):
             if ext not in allowed_extensions:
                 raise forms.ValidationError(
                     f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
+                )
+            
+            # Magic byte validation
+            file.seek(0)
+            header = file.read(8)
+            file.seek(0)
+            
+            magic_bytes = {
+                'pdf': b'%PDF',
+                'docx': b'PK\x03\x04',
+                'doc': b'\xd0\xcf\x11\xe0',
+            }
+            
+            expected_magic = magic_bytes.get(ext)
+            if expected_magic and not header.startswith(expected_magic):
+                raise forms.ValidationError(
+                    f'File content does not match {ext.upper()} format.'
                 )
         return file
     

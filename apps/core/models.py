@@ -66,6 +66,11 @@ class Job(SoftDeleteModel):
     class Meta:
         db_table = 'job_description'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'is_deleted'], name='job_status_deleted_idx'),
+            models.Index(fields=['-created_at'], name='job_created_idx'),
+            models.Index(fields=['title'], name='job_title_idx'),
+        ]
     
     def __str__(self):
         return self.title
@@ -135,6 +140,12 @@ class Resume(SoftDeleteModel):
     class Meta:
         db_table = 'resumes'
         ordering = ['-final_score', '-created_at']
+        indexes = [
+            models.Index(fields=['job', 'is_deleted'], name='resume_job_deleted_idx'),
+            models.Index(fields=['tier'], name='resume_tier_idx'),
+            models.Index(fields=['-final_score'], name='resume_score_idx'),
+            models.Index(fields=['screening_status'], name='resume_status_idx'),
+        ]
     
     def __str__(self):
         return f"{self.candidate_name} - {self.job.title}"

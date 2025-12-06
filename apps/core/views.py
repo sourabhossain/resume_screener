@@ -180,57 +180,26 @@ def resume_create(request, job_pk):
             resume.screening_status = 'pending'
             resume.save()
             
-            # Trigger AI screening task
+            # Process resume using centralized service
             try:
-                from apps.core.tasks import screen_resume_task
-                screen_resume_task.delay(resume.id)
-                messages.success(request, 'Resume added! AI screening started in background.')
-            except Exception as e:
-                # Celery/Redis not available - run synchronous screening
-                try:
-                    from apps.core.services.document_extractor import DocumentExtractor
-                    from apps.core.services.ai_screener import screen_resume
-                    
-                    # Extract text from resume
-                    if resume.file:
-                        resume.raw_text = DocumentExtractor.extract(resume.file.path)
-                        resume.save(update_fields=['raw_text'])
-                    
-                    # Run AI screening synchronously
-                    if resume.raw_text and job.description:
-                        resume.screening_status = 'processing'
-                        resume.save(update_fields=['screening_status'])
-                        
-                        result = screen_resume(resume.raw_text, job.description)
-                        
-                        if not result.get('error'):
-                            resume.skills = result.get('skills', [])
-                            resume.education = result.get('education', [])
-                            resume.certifications = result.get('certifications', [])
-                            resume.experience_years = round(result.get('experience_years', 0), 1)
-                            resume.matched_skills = result.get('matched_skills', [])
-                            resume.missing_skills = result.get('missing_skills', [])
-                            resume.skills_score = round(result.get('skill_score', 0), 1)
-                            resume.experience_score = round(result.get('experience_score', 0), 1)
-                            resume.education_score = round(result.get('education_score', 0), 1)
-                            resume.certification_score = round(result.get('certification_score', 0), 1)
-                            resume.final_score = round(result.get('final_score', 0), 1)
-                            resume.tier = result.get('tier', '').lower()
-                            resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
-                            resume.reasoning = result.get('reasoning', '')
-                            resume.screening_status = 'completed'
-                            resume.save()
-                            messages.success(request, 'Resume added and AI screening completed!')
-                        else:
-                            resume.screening_status = 'failed'
-                            resume.save(update_fields=['screening_status'])
-                            messages.warning(request, f'Resume added but screening failed: {result.get("error")}')
+                from apps.core.services.resume_service import ResumeService
+                result = ResumeService.process_resume(resume)
+                
+                if result.get('success'):
+                    messages.success(request, f'Resume added and AI screening completed! Score: {result.get("final_score", 0):.0f}%')
+                else:
+                    error_type = result.get('error_type', 'unknown')
+                    if error_type == 'extraction':
+                        messages.warning(request, f'Resume added but could not extract text: {result.get("error")}')
+                    elif error_type == 'job_description':
+                        messages.warning(request, 'Resume added but job has no description for AI screening.')
                     else:
-                        messages.success(request, 'Resume added successfully!')
-                except Exception as sync_error:
-                    import logging
-                    logging.getLogger(__name__).error(f"Sync screening failed: {sync_error}")
-                    messages.success(request, 'Resume added successfully!')
+                        messages.warning(request, f'Resume added but screening failed: {result.get("error")}')
+                        
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Resume processing failed: {e}")
+                messages.success(request, 'Resume added successfully!')
             
             return redirect('core:job_detail', pk=job_pk)
     else:
@@ -281,51 +250,20 @@ def resume_rescreen(request, pk):
         return redirect('core:resume_detail', pk=pk)
     
     try:
-        from apps.core.services.document_extractor import DocumentExtractor
-        from apps.core.services.ai_screener import screen_resume
+        from apps.core.services.resume_service import ResumeService
+        result = ResumeService.process_resume(resume)
         
-        # Extract text if not already done
-        if not resume.raw_text and resume.file:
-            resume.raw_text = DocumentExtractor.extract(resume.file.path)
-            resume.save(update_fields=['raw_text'])
-        
-        if not resume.raw_text:
-            messages.error(request, 'No resume text available for screening.')
-            return redirect('core:resume_detail', pk=pk)
-        
-        if not resume.job.description:
-            messages.error(request, 'Job description is required for screening.')
-            return redirect('core:resume_detail', pk=pk)
-        
-        # Run AI screening
-        resume.screening_status = 'processing'
-        resume.save(update_fields=['screening_status'])
-        
-        result = screen_resume(resume.raw_text, resume.job.description)
-        
-        if not result.get('error'):
-            resume.skills = result.get('skills', [])
-            resume.education = result.get('education', [])
-            resume.certifications = result.get('certifications', [])
-            resume.experience_years = round(result.get('experience_years', 0), 1)
-            resume.matched_skills = result.get('matched_skills', [])
-            resume.missing_skills = result.get('missing_skills', [])
-            resume.skills_score = round(result.get('skill_score', 0), 1)
-            resume.experience_score = round(result.get('experience_score', 0), 1)
-            resume.education_score = round(result.get('education_score', 0), 1)
-            resume.certification_score = round(result.get('certification_score', 0), 1)
-            resume.final_score = round(result.get('final_score', 0), 1)
-            resume.tier = result.get('tier', '').lower()
-            resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
-            resume.reasoning = result.get('reasoning', '')
-            resume.screening_status = 'completed'
-            resume.save()
-            messages.success(request, f'AI screening completed! Score: {resume.final_score:.0f}%')
+        if result.get('success'):
+            messages.success(request, f'AI screening completed! Score: {result.get("final_score", 0):.0f}%')
         else:
-            resume.screening_status = 'failed'
-            resume.save(update_fields=['screening_status'])
-            messages.error(request, f'Screening failed: {result.get("error")}')
-            
+            error_type = result.get('error_type', 'unknown')
+            if error_type == 'extraction':
+                messages.error(request, f'Failed to extract text: {result.get("error")}')
+            elif error_type == 'job_description':
+                messages.error(request, 'Job description is required for screening.')
+            else:
+                messages.error(request, f'Screening failed: {result.get("error")}')
+                
     except Exception as e:
         import logging
         logging.getLogger(__name__).error(f"Re-screening failed: {e}")

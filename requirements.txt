@@ -12,6 +12,7 @@ pytest-cov>=4.1
 
 # API
 djangorestframework>=3.14
+drf-spectacular>=0.27
 
 # Security
 django-ratelimit>=4.1
@@ -29,3 +30,7 @@ tenacity>=8.0
 # Async Tasks
 celery>=5.3
 redis>=5.0
+
+# Monitoring & Logging
+sentry-sdk>=1.0
+python-json-logger>=2.0

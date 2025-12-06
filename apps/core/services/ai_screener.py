@@ -11,6 +11,7 @@ from django.conf import settings
 from langgraph.graph import StateGraph, END
 
 from .llm_client import llm_client
+from .prompt_loader import get_extraction_prompt, get_matching_prompt, get_reasoning_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -154,7 +155,7 @@ def extract_node(state: ResumeScreeningState) -> ResumeScreeningState:
         config = settings.AI_SCREENING_CONFIG
         resume_text = state['resume_text'][:config['MAX_RESUME_CHARS']]
         
-        prompt = EXTRACTION_PROMPT.format(resume_text=resume_text)
+        prompt = get_extraction_prompt(resume_text=resume_text)
         response = llm_client.invoke_json(prompt, "You are an expert resume parser.")
         
         state['candidate_name'] = response.get('candidate_name', 'Unknown')
@@ -181,7 +182,7 @@ def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
         config = settings.AI_SCREENING_CONFIG
         job_desc = state['job_description'][:config['MAX_JOB_DESC_CHARS']]
         
-        prompt = MATCHING_PROMPT.format(
+        prompt = get_matching_prompt(
             job_description=job_desc,
             candidate_name=state['candidate_name'],
             skills=", ".join(state['skills']),
@@ -266,7 +267,7 @@ def rank_node(state: ResumeScreeningState) -> ResumeScreeningState:
             state['recommendation'] = Recommendation.REJECT.value
         
         # Generate reasoning
-        prompt = REASONING_PROMPT.format(
+        prompt = get_reasoning_prompt(
             candidate_name=state['candidate_name'],
             final_score=state['final_score'],
             tier=state['tier'],

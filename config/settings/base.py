@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     
     # Third-party apps
     'rest_framework',
+    'drf_spectacular',
     
     # Local apps
     'apps.core',
@@ -171,6 +172,20 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
+# DRF Spectacular Configuration (OpenAPI/Swagger)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Resume Screening System API',
+    'DESCRIPTION': 'AI-powered resume screening API for job applications',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+    },
 }
 
 

@@ -109,6 +109,7 @@ class LLMClient:
     def invoke_text(self, prompt: str, system_prompt: str = "You are a helpful assistant.") -> str:
         """
         Invoke LLM and return text response.
+        Uses caching to avoid duplicate API calls.
         
         Args:
             prompt: The user prompt
@@ -120,13 +121,25 @@ class LLMClient:
         if not self._llm:
             raise RuntimeError("LLM not initialized. Check OPENAI_API_KEY.")
         
+        # Check cache
+        cache_key = self._get_cache_key(f"text:{system_prompt}:{prompt}")
+        cached = cache.get(cache_key)
+        if cached:
+            logger.debug("LLM text cache hit")
+            return cached
+        
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=prompt)
         ]
         
         response = self._llm.invoke(messages)
-        return response.content
+        result = response.content
+        
+        # Cache result
+        cache.set(cache_key, result, self.CACHE_TIMEOUT)
+        
+        return result
 
 
 # Singleton instance
