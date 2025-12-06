@@ -11,7 +11,6 @@ from .forms import JobForm, ResumeForm, ResumeEditForm
 def health_check(request):
     """Health check endpoint for monitoring and load balancers."""
     try:
-        # Check database connectivity
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
         
@@ -34,18 +33,17 @@ def dashboard(request):
     total_jobs = Job.objects.count()
     active_jobs = Job.objects.filter(status='active').count()
     
-    # Filter out resumes from deleted jobs
     active_resumes_qs = Resume.objects.filter(job__is_deleted=False)
     
     total_resumes = active_resumes_qs.count()
     avg_score = active_resumes_qs.filter(final_score__isnull=False).aggregate(Avg('final_score'))['final_score__avg'] or 0
     
-    # Tier distribution
+
     top_tier = active_resumes_qs.filter(tier='top').count()
     mid_tier = active_resumes_qs.filter(tier='mid').count()
     low_tier = active_resumes_qs.filter(tier='low').count()
     
-    # Screening status
+
     pending_screening = active_resumes_qs.filter(screening_status='pending').count()
     processing_screening = active_resumes_qs.filter(screening_status='processing').count()
     
@@ -59,11 +57,9 @@ def dashboard(request):
         'avg_score': round(avg_score, 1),
         'recent_jobs': recent_jobs,
         'recent_resumes': recent_resumes,
-        # Tier distribution
         'top_tier': top_tier,
         'mid_tier': mid_tier,
         'low_tier': low_tier,
-        # Screening status
         'pending_screening': pending_screening,
         'processing_screening': processing_screening,
     }
@@ -79,7 +75,7 @@ def job_list(request):
     
     jobs = Job.objects.annotate(resume_count=Count('resumes'))
     
-    # Search functionality
+
     search_query = request.GET.get('q', '').strip()
     if search_query:
         jobs = jobs.filter(
@@ -87,18 +83,17 @@ def job_list(request):
             Q(description__icontains=search_query)
         )
     
-    # Status filter - default to 'active' if not specified
+
     status_filter = request.GET.get('status', 'active').strip()
     
-    # Handle 'all' to show all jobs (no filter)
     if status_filter == 'all':
-        pass  # No filtering
+        pass
     elif status_filter in ['active', 'draft', 'closed']:
         jobs = jobs.filter(status=status_filter)
     
     jobs = jobs.order_by('-created_at')
     
-    # Pagination - 10 items per page
+
     paginator = Paginator(jobs, 10)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -160,13 +155,12 @@ def job_delete(request, pk):
     return render(request, 'core/confirm_delete.html', {'object': job, 'type': 'job'})
 
 
-# Resume Views
+
 @login_required
 def resume_create(request, job_pk):
     """Create a new resume for a job."""
     job = get_object_or_404(Job, pk=job_pk)
     
-    # Only allow resume creation for active jobs
     if job.status != 'active':
         status_label = 'Draft' if job.status == 'draft' else 'Closed'
         messages.error(request, f'Cannot add resume. This job is currently {status_label}.')
@@ -180,7 +174,6 @@ def resume_create(request, job_pk):
             resume.screening_status = 'pending'
             resume.save()
             
-            # Process resume using centralized service
             try:
                 from apps.core.services.resume_service import ResumeService
                 result = ResumeService.process_resume(resume)

@@ -21,7 +21,7 @@ class AIScreeningError(ResumeScreeningError):
     """Raised when AI screening fails."""
     
     def __init__(self, message: str, stage: str = None):
-        self.stage = stage  # 'extraction', 'matching', 'scoring', 'ranking'
+        self.stage = stage
         super().__init__(message)
 
 

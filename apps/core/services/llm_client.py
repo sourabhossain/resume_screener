@@ -25,7 +25,7 @@ class LLMClient:
     _llm = None
     _llm_json = None
     
-    CACHE_TIMEOUT = 3600  # 1 hour
+    CACHE_TIMEOUT = 3600
     
     def __new__(cls):
         if cls._instance is None:
@@ -41,14 +41,12 @@ class LLMClient:
                 logger.warning("OPENAI_API_KEY not configured")
                 return
             
-            # Regular LLM for text responses
             self._llm = ChatOpenAI(
                 model=model,
                 temperature=0.0,
                 api_key=api_key
             )
             
-            # JSON-mode LLM for structured responses
             self._llm_json = ChatOpenAI(
                 model=model,
                 temperature=0.0,
@@ -81,14 +79,13 @@ class LLMClient:
         if not self._llm_json:
             raise RuntimeError("LLM not initialized. Check OPENAI_API_KEY.")
         
-        # Check cache
         cache_key = self._get_cache_key(f"{system_prompt}:{prompt}")
         cached = cache.get(cache_key)
         if cached:
             logger.debug("LLM cache hit")
             return cached
         
-        # Call LLM
+
         messages = [
             SystemMessage(content=system_prompt),
             HumanMessage(content=prompt)
@@ -97,7 +94,7 @@ class LLMClient:
         response = self._llm_json.invoke(messages)
         result = json.loads(response.content)
         
-        # Cache result
+
         cache.set(cache_key, result, self.CACHE_TIMEOUT)
         
         return result
@@ -121,7 +118,6 @@ class LLMClient:
         if not self._llm:
             raise RuntimeError("LLM not initialized. Check OPENAI_API_KEY.")
         
-        # Check cache
         cache_key = self._get_cache_key(f"text:{system_prompt}:{prompt}")
         cached = cache.get(cache_key)
         if cached:
@@ -136,11 +132,11 @@ class LLMClient:
         response = self._llm.invoke(messages)
         result = response.content
         
-        # Cache result
+
         cache.set(cache_key, result, self.CACHE_TIMEOUT)
         
         return result
 
 
-# Singleton instance
+
 llm_client = LLMClient()

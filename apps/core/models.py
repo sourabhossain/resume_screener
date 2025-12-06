@@ -58,7 +58,7 @@ class Job(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
     file_type = models.CharField(max_length=50, blank=True)
     
-    # AI Matching Fields
+
     required_skills = models.JSONField(default=list, blank=True, help_text="Required skills for matching")
     required_experience = models.FloatField(null=True, blank=True, help_text="Required years of experience")
     required_education = models.JSONField(default=list, blank=True, help_text="Required education levels")
@@ -117,7 +117,7 @@ class Resume(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True)
     file_type = models.CharField(max_length=50, blank=True)
     
-    # AI Screening Fields
+
     skills = models.JSONField(default=list, blank=True, help_text="Extracted skills from resume")
     education = models.JSONField(default=list, blank=True, help_text="Extracted education")
     certifications = models.JSONField(default=list, blank=True, help_text="Extracted certifications")

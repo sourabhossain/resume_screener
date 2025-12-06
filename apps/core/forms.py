@@ -64,12 +64,11 @@ class ResumeForm(forms.ModelForm):
         """Validate file type, size, and content (magic byte check)."""
         file = self.cleaned_data.get('file')
         if file:
-            # Check file size (max 5MB)
-            max_size = 5 * 1024 * 1024  # 5MB
+            max_size = 5 * 1024 * 1024
             if file.size > max_size:
                 raise forms.ValidationError('File size must be under 5MB.')
             
-            # Check file extension
+
             allowed_extensions = ['pdf', 'doc', 'docx']
             ext = file.name.split('.')[-1].lower()
             if ext not in allowed_extensions:
@@ -77,15 +76,14 @@ class ResumeForm(forms.ModelForm):
                     f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
                 )
             
-            # Magic byte validation - check file content matches extension
             file.seek(0)
             header = file.read(8)
-            file.seek(0)  # Reset file pointer
+            file.seek(0)
             
             magic_bytes = {
                 'pdf': b'%PDF',
-                'docx': b'PK\x03\x04',  # ZIP format (DOCX is a ZIP)
-                'doc': b'\xd0\xcf\x11\xe0',  # OLE compound document
+                'docx': b'PK\x03\x04',
+                'doc': b'\xd0\xcf\x11\xe0',
             }
             
             expected_magic = magic_bytes.get(ext)
@@ -174,7 +172,7 @@ class ResumeEditForm(forms.ModelForm):
                     f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
                 )
             
-            # Magic byte validation
+
             file.seek(0)
             header = file.read(8)
             file.seek(0)

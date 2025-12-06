@@ -23,7 +23,6 @@ def screen_resume_task(self, resume_id: int):
         resume = Resume.objects.select_related('job').get(id=resume_id)
         logger.info(f"Starting screening for resume {resume_id}")
         
-        # Use centralized service
         result = ResumeService.process_resume(resume)
         
         if result.get('success'):
@@ -40,14 +39,12 @@ def screen_resume_task(self, resume_id: int):
     except Exception as e:
         logger.exception(f"Error screening resume {resume_id}: {e}")
         
-        # Update status to failed
         try:
             from apps.core.models import Resume
             Resume.objects.filter(id=resume_id).update(screening_status='failed')
         except:
             pass
         
-        # Retry the task
         raise self.retry(exc=e, countdown=60)
 
 

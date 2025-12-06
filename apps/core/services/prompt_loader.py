@@ -6,7 +6,6 @@ from pathlib import Path
 from functools import lru_cache
 from typing import Dict, Any
 
-# Directory containing prompt templates
 PROMPTS_DIR = Path(__file__).parent.parent / 'prompts'
 
 

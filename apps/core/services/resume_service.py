@@ -93,30 +93,30 @@ class ResumeService:
             result: ScreeningResult dictionary from AI screening
         """
         with transaction.atomic():
-            # Extracted data
+
             resume.candidate_name = result.get('candidate_name', resume.candidate_name)
             resume.skills = result.get('skills', [])
             resume.education = result.get('education', [])
             resume.certifications = result.get('certifications', [])
             resume.experience_years = round(result.get('experience_years', 0), 1)
             
-            # Matching data
+
             resume.matched_skills = result.get('matched_skills', [])
             resume.missing_skills = result.get('missing_skills', [])
             
-            # Scores (rounded for clean display)
+
             resume.skills_score = round(result.get('skill_score', 0))
             resume.experience_score = round(result.get('experience_score', 0))
             resume.education_score = round(result.get('education_score', 0))
             resume.certification_score = round(result.get('certification_score', 0))
             resume.final_score = round(result.get('final_score', 0))
             
-            # Tier and recommendation
+
             resume.tier = result.get('tier', '').lower()
             resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
             resume.reasoning = result.get('reasoning', '')
             
-            # Update status
+
             resume.screening_status = 'completed'
             resume.save()
     
@@ -132,17 +132,13 @@ class ResumeService:
             Dictionary with processing results
         """
         try:
-            # Update status
             resume.screening_status = 'processing'
             resume.save(update_fields=['screening_status'])
             
-            # Extract text
             cls.extract_text(resume)
             
-            # Run AI screening
             result = cls.run_screening(resume)
             
-            # Apply results
             cls.apply_screening_result(resume, result)
             
             logger.info(f"Completed processing resume {resume.id}: Score={resume.final_score}")
@@ -181,7 +177,7 @@ class ResumeService:
             return {'success': False, 'error': str(e), 'error_type': 'unknown'}
 
 
-# Convenience function for sync processing
+
 def process_resume_sync(resume) -> Dict[str, Any]:
     """Synchronously process a resume through AI screening."""
     return ResumeService.process_resume(resume)
