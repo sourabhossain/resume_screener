@@ -30,7 +30,7 @@ AI-powered resume screening system built with Django, PostgreSQL, and Docker.
 ### Quick Start
 
 ```bash
-# 1. Clone
+# 1. Clone the repository
 git clone git@github.com:sourabhossain/resume_screener.git
 cd resume_screening_system
 
