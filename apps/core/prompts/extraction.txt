@@ -16,6 +16,13 @@ IMPORTANT INSTRUCTIONS:
 
 3. Extract education with degree names and institutions
 
+4. Extract ALL certifications and professional credentials including:
+   - Cloud certifications (AWS, Azure, GCP, etc.)
+   - Professional certifications (PMP, CISSP, CPA, etc.)
+   - Vendor certifications (Salesforce, Microsoft, Oracle, etc.)
+   - Training certifications and bootcamp completions
+   - Any other professional credentials mentioned
+
 Return ONLY valid JSON with this exact structure:
 {{
     "candidate_name": "Full Name from resume",
