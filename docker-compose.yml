@@ -49,6 +49,7 @@ services:
       - DB_PORT=5433
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
@@ -73,6 +74,7 @@ services:
       - DB_PORT=5433
       - DJANGO_SETTINGS_MODULE=config.settings.dev
       - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     healthcheck:
       test: ["CMD", "celery", "-A", "config", "inspect", "ping"]
       interval: 30s

@@ -35,7 +35,7 @@ class LLMClient:
     def __init__(self):
         if self._llm is None:
             api_key = settings.OPENAI_API_KEY
-            model = getattr(settings, 'OPENAI_MODEL', 'gpt-4o')
+            model = getattr(settings, 'OPENAI_MODEL', 'gpt-5-nano-2025-08-07')
             
             if not api_key:
                 logger.warning("OPENAI_API_KEY not configured")

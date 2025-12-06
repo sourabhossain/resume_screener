@@ -1,5 +1,5 @@
 <div data-title="{{ title }}">
-    <form method="post" enctype="multipart/form-data" hx-post hx-target="#modal-content" hx-swap="innerHTML">
+    <form method="post" enctype="multipart/form-data" hx-post hx-target="#modal-content" hx-swap="innerHTML" x-data="{ submitting: false }" @submit="submitting = true">
         {% csrf_token %}
         
         <div class="space-y-6">
@@ -68,18 +68,33 @@
                     class="px-5 py-2.5 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold">
                 Cancel
             </button>
-            <button type="submit" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg flex items-center gap-2">
-                {% if resume %}
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            <button type="submit" 
+                    :disabled="submitting"
+                    :class="{ 'opacity-50 cursor-not-allowed': submitting }"
+                    class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg flex items-center gap-2 transition-all">
+                <!-- Loading spinner -->
+                <svg x-show="submitting" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                Update Resume
-                {% else %}
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Add Resume
-                {% endif %}
+                <!-- Normal state -->
+                <template x-if="!submitting">
+                    <span class="flex items-center gap-2">
+                        {% if resume %}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Update Resume
+                        {% else %}
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Add Resume
+                        {% endif %}
+                    </span>
+                </template>
+                <!-- Submitting state -->
+                <span x-show="submitting">Processing...</span>
             </button>
         </div>
     </form>

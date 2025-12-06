@@ -211,7 +211,7 @@ CELERY_TIMEZONE = 'UTC'
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
-OPENAI_MODEL = 'gpt-4o'
+OPENAI_MODEL = 'gpt-5-nano-2025-08-07'
 
 
 # AI Screening Configuration

@@ -174,25 +174,14 @@ def resume_create(request, job_pk):
             resume.screening_status = 'pending'
             resume.save()
             
-            try:
-                from apps.core.services.resume_service import ResumeService
-                result = ResumeService.process_resume(resume)
-                
-                if result.get('success'):
-                    messages.success(request, f'Resume added and AI screening completed! Score: {result.get("final_score", 0):.0f}%')
-                else:
-                    error_type = result.get('error_type', 'unknown')
-                    if error_type == 'extraction':
-                        messages.warning(request, f'Resume added but could not extract text: {result.get("error")}')
-                    elif error_type == 'job_description':
-                        messages.warning(request, 'Resume added but job has no description for AI screening.')
-                    else:
-                        messages.warning(request, f'Resume added but screening failed: {result.get("error")}')
-                        
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).error(f"Resume processing failed: {e}")
-                messages.success(request, 'Resume added successfully!')
+            # Queue for async AI screening - user won't have to wait
+            from apps.core.tasks import screen_resume_task
+            screen_resume_task.delay(resume.id)
+            
+            messages.success(
+                request, 
+                'Resume added successfully! AI screening is in progress - refresh to see results.'
+            )
             
             return redirect('core:job_detail', pk=job_pk)
     else:
