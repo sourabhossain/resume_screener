@@ -25,7 +25,7 @@ AI-powered resume screening system built with Django, PostgreSQL, and Docker.
 
 - Docker & Docker Compose
 - Git
-- OpenAI API Key (AI স্ক্রীনিং ফিচারের জন্য)
+- OpenAI API Key (Required for AI screening)
 
 ### Quick Start
 
@@ -38,7 +38,7 @@ cd resume_screening_system
 cp .env.example .env
 ```
 
-`.env` ফাইলে নিচের ভ্যালুগুলো সেট করুন:
+Configure your `.env` file with the following values:
 
 ```env
 # Database
@@ -126,8 +126,8 @@ docker-compose up -d
 
 | Issue                     | Solution                                                 |
 | ------------------------- | -------------------------------------------------------- |
-| Database connection error | `docker-compose restart db` এবং health check দেখুন       |
-| Celery not processing     | `docker-compose logs celery` দেখুন                       |
+| Database connection error | Run `docker-compose restart db` and check health status  |
+| Celery not processing     | Check logs with `docker-compose logs celery`             |
 | Static files missing      | `docker-compose exec web python manage.py collectstatic` |
 
 ---
