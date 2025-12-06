@@ -19,93 +19,116 @@ AI-powered resume screening system built with Django, PostgreSQL, and Docker.
 
 ---
 
-## 🐳 Docker Setup (Recommended)
+## 🐳 Docker Setup
 
 ### Prerequisites
 
-- Docker & Docker Compose installed
+- Docker & Docker Compose
 - Git
+- OpenAI API Key (AI স্ক্রীনিং ফিচারের জন্য)
 
 ### Quick Start
 
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
+# 1. Clone
+git clone git@github.com:sourabhossain/resume_screener.git
 cd resume_screening_system
 
-# 2. Create .env file
+# 2. Environment setup
 cp .env.example .env
-# Edit .env with your settings
-
-# 3. Build and start containers
-docker-compose up -d --build
-
-# 4. Run migrations
-docker-compose exec web python manage.py migrate
-
-# 5. Create superuser
-docker-compose exec web python manage.py createsuperuser
-
-# 6. Access the application
-# Web App: http://localhost:8000
-# pgAdmin: http://localhost:5050
 ```
 
-### Environment Variables (.env)
+`.env` ফাইলে নিচের ভ্যালুগুলো সেট করুন:
 
 ```env
 # Database
 DB_NAME=resume_db
 DB_USER=postgres
-DB_PASSWORD=your_password
+DB_PASSWORD=your_secure_password
 DB_HOST=db
 DB_PORT=5433
 
 # Django
 DEBUG=True
-SECRET_KEY=your-secret-key
+SECRET_KEY=your-secret-key-here
 ALLOWED_HOSTS=localhost,127.0.0.1
-```
 
-### Docker Commands
+# OpenAI (Required for AI screening)
+OPENAI_API_KEY=sk-your-openai-api-key
+
+# Celery (Redis)
+CELERY_BROKER_URL=redis://redis:6379/0
+```
 
 ```bash
-# Start containers
-docker-compose up -d
+# 3. Build & Start
+docker-compose up -d --build
 
-# Stop containers
-docker-compose down
+# 4. Database setup
+docker-compose exec web python manage.py migrate
 
-# View logs
-docker-compose logs -f web
-
-# Rebuild after requirements change
-docker-compose build --no-cache
-docker-compose up -d
-
-# Run tests
-docker-compose exec web pytest
-
-# Django shell
-docker-compose exec web python manage.py shell
-
-# Create migrations
-docker-compose exec web python manage.py makemigrations
+# 5. Create admin user
+docker-compose exec web python manage.py createsuperuser
 ```
 
-### Services
+### Access Points
 
-| Service | Port | Description         |
-| ------- | ---- | ------------------- |
-| web     | 8000 | Django application  |
-| db      | 5433 | PostgreSQL database |
-| pgadmin | 5050 | Database admin UI   |
+| Service | URL                   | Description       |
+| ------- | --------------------- | ----------------- |
+| Web App | http://localhost:8000 | Main application  |
+| Nginx   | http://localhost:80   | Production proxy  |
+| pgAdmin | http://localhost:5050 | Database admin UI |
 
-### pgAdmin Login
+**pgAdmin Credentials:** `admin@admin.com` / `root`
 
-- **Email:** admin@admin.com
-- **Password:** root
-- **DB Password:** (from your .env DB_PASSWORD)
+### Services Architecture
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Nginx     │────▶│   Django    │────▶│  PostgreSQL │
+│   (Port 80) │     │  (Port 8000)│     │  (Port 5433)│
+└─────────────┘     └──────┬──────┘     └─────────────┘
+                          │
+                    ┌─────▼─────┐     ┌─────────────┐
+                    │  Celery   │────▶│    Redis    │
+                    │  Worker   │     │ (Port 6379) │
+                    └───────────┘     └─────────────┘
+```
+
+### Common Commands
+
+```bash
+# Container management
+docker-compose up -d          # Start all services
+docker-compose down           # Stop all services
+docker-compose restart web    # Restart specific service
+
+# Logs
+docker-compose logs -f web    # Django logs
+docker-compose logs -f celery # Celery worker logs
+
+# Django commands
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py makemigrations
+docker-compose exec web python manage.py shell
+docker-compose exec web python manage.py collectstatic
+
+# Testing
+docker-compose exec web pytest
+docker-compose exec web pytest --cov=apps
+
+# Rebuild (after changing requirements.txt)
+docker-compose build --no-cache web celery
+docker-compose up -d
+```
+
+### Troubleshooting
+
+| Issue                     | Solution                                                 |
+| ------------------------- | -------------------------------------------------------- |
+| Database connection error | `docker-compose restart db` এবং health check দেখুন       |
+| Celery not processing     | `docker-compose logs celery` দেখুন                       |
+| Static files missing      | `docker-compose exec web python manage.py collectstatic` |
 
 ---
 
