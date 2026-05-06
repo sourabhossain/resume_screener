@@ -110,12 +110,10 @@
             <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-dark-700">
                 <div class="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                     <div class="flex -space-x-2">
-                        {% for i in "123"|make_list %}
-                        {% if forloop.counter <= job.resume_count and forloop.counter <= 3 %}
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 border-2 border-white dark:border-dark-800 flex items-center justify-center text-white text-xs font-bold shadow">
-                            {{ forloop.counter }}
+                        {% for letter in job.preview_initials %}
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 border-2 border-white dark:border-dark-800 flex items-center justify-center text-white text-xs font-bold shadow uppercase">
+                            {{ letter }}
                         </div>
-                        {% endif %}
                         {% endfor %}
                     </div>
                     <span class="text-sm font-semibold">{{ job.resume_count }} Candidate{{ job.resume_count|pluralize }}</span>

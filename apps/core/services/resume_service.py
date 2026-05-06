@@ -47,9 +47,18 @@ class ResumeService:
         
         try:
             text = DocumentExtractor.extract(resume.file.path)
+            if not text or not text.strip():
+                raise DocumentExtractionError(
+                    "No text could be extracted from the file. "
+                    "It may be a scanned image or an empty document. "
+                    "Please upload a text-based PDF or DOCX.",
+                    file_path=resume.file.path
+                )
             resume.raw_text = text
             resume.save(update_fields=['raw_text'])
             return text
+        except DocumentExtractionError:
+            raise
         except Exception as e:
             raise DocumentExtractionError(str(e), file_path=resume.file.path)
     
@@ -76,7 +85,7 @@ class ResumeService:
         if not resume.raw_text:
             raise AIScreeningError("No resume text available", stage="extraction")
         
-        result = screen_resume(resume.raw_text, resume.job.description)
+        result = screen_resume(resume.raw_text, resume.job.description, resume_id=resume.id)
         
         if result.get('error'):
             raise AIScreeningError(result['error'], stage="screening")
@@ -93,6 +102,9 @@ class ResumeService:
             result: ScreeningResult dictionary from AI screening
         """
         with transaction.atomic():
+            # Acquire a row-level lock to prevent concurrent updates overwriting each other
+            from apps.core.models import Resume as ResumeModel
+            ResumeModel.objects.select_for_update().filter(pk=resume.pk).exists()
 
             resume.candidate_name = result.get('candidate_name', resume.candidate_name)
             resume.skills = result.get('skills', [])
@@ -112,8 +124,18 @@ class ResumeService:
             resume.final_score = round(result.get('final_score', 0))
             
 
-            resume.tier = result.get('tier', '').lower()
-            resume.recommendation = result.get('recommendation', '').lower().replace(' ', '_')
+            # Derive tier/recommendation from final_score (authoritative source,
+            # moved here from Resume.save() so manual edits are not silently overridden)
+            score = resume.final_score
+            if score >= 80:
+                resume.tier = 'top'
+                resume.recommendation = 'interview'
+            elif score >= 60:
+                resume.tier = 'mid'
+                resume.recommendation = 'talent_pool'
+            else:
+                resume.tier = 'low'
+                resume.recommendation = 'reject'
             resume.reasoning = result.get('reasoning', '')
             
 
@@ -175,9 +197,3 @@ class ResumeService:
             resume.screening_status = 'failed'
             resume.save(update_fields=['screening_status'])
             return {'success': False, 'error': str(e), 'error_type': 'unknown'}
-
-
-
-def process_resume_sync(resume) -> Dict[str, Any]:
-    """Synchronously process a resume through AI screening."""
-    return ResumeService.process_resume(resume)

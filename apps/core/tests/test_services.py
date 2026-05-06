@@ -25,12 +25,16 @@ class TestDocumentExtractor:
         assert "This is test resume content" in result
         assert "Python" in result
     
-    def test_unsupported_file_type(self):
+    def test_unsupported_file_type(self, tmp_path):
         """Test that unsupported file types raise ValueError."""
         from apps.core.services.document_extractor import DocumentExtractor
         
+        # Create a temp file with unsupported extension
+        xyz_file = tmp_path / "test.xyz"
+        xyz_file.write_text("some content")
+        
         with pytest.raises(ValueError, match="Unsupported file type"):
-            DocumentExtractor.extract("/path/to/file.xyz")
+            DocumentExtractor.extract(str(xyz_file))
     
     def test_file_not_found(self):
         """Test that missing file raises FileNotFoundError."""

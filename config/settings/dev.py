@@ -11,6 +11,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Django 4+ validates POST origins; without this, admin/login can return 403 on localhost/Docker.
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'http://localhost',
+    'http://127.0.0.1',
+]
+
 # Development-specific apps
 INSTALLED_APPS += [
     # 'debug_toolbar',

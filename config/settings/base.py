@@ -116,6 +116,9 @@ LOGOUT_REDIRECT_URL = 'login'
 
 # Logging Configuration
 
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -132,8 +135,13 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            # Daily rotation at midnight UTC; rotated files named app.log.YYYY-MM-DD
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': BASE_DIR / 'logs' / 'app.log',
+            'when': 'midnight',
+            'interval': 1,
+            'backupCount': 30,
+            'encoding': 'utf-8',
             'formatter': 'verbose',
         },
         'console': {

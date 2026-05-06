@@ -139,7 +139,8 @@ class TestAPIDocumentation:
         """Test OpenAPI schema endpoint is accessible."""
         response = client.get('/api/schema/')
         assert response.status_code == status.HTTP_200_OK
-        assert 'openapi' in response.json()
+        # Schema returns OpenAPI format, check content instead of .json()
+        assert b'openapi' in response.content
     
     def test_swagger_docs(self, client):
         """Test Swagger UI is accessible."""

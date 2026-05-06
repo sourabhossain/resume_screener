@@ -6,24 +6,29 @@ from .models import Job, Resume
 
 
 class ResumeSerializer(serializers.ModelSerializer):
+    """Serializer for Resume with computed display fields."""
     tier_display = serializers.CharField(source='get_tier_display', read_only=True)
     recommendation_display = serializers.CharField(source='get_recommendation_display', read_only=True)
+    screening_status_display = serializers.CharField(source='get_screening_status_display', read_only=True)
     
     class Meta:
         model = Resume
         fields = [
             'id', 'candidate_name', 'file', 'file_name', 'file_type',
             'tier', 'tier_display', 'recommendation', 'recommendation_display',
-            'experience_score', 'education_score', 'skills_score', 'final_score',
-            'matched_skills', 'missing_skills',
+            'screening_status', 'screening_status_display',
+            'experience_score', 'education_score', 'skills_score', 
+            'certification_score', 'final_score',
+            'matched_skills', 'missing_skills', 'reasoning',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'file_name', 'file_type', 'created_at', 'updated_at']
 
 
 class JobListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for job listings."""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    resume_count = serializers.IntegerField(read_only=True)
+    resume_count = serializers.IntegerField(read_only=True)  # Expects annotation from viewset
     
     class Meta:
         model = Job
@@ -34,9 +39,10 @@ class JobListSerializer(serializers.ModelSerializer):
 
 
 class JobDetailSerializer(serializers.ModelSerializer):
+    """Full serializer for job details with resumes."""
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     resumes = ResumeSerializer(many=True, read_only=True, source='active_resumes')
-    resume_count = serializers.SerializerMethodField()
+    resume_count = serializers.IntegerField(read_only=True)  # Uses annotation from viewset
     
     class Meta:
         model = Job
@@ -44,10 +50,9 @@ class JobDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'status', 'status_display',
             'posted_date', 'closing_date',
             'file', 'file_name', 'file_type',
+            'required_skills', 'required_experience', 'required_education',
             'resume_count', 'resumes',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'file_name', 'file_type', 'created_at', 'updated_at']
-    
-    def get_resume_count(self, obj):
-        return obj.active_resumes.count()
+

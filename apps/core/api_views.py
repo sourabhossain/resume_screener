@@ -3,6 +3,7 @@ Django REST Framework ViewSets for Job and Resume.
 """
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count
@@ -53,7 +54,10 @@ class JobViewSet(viewsets.ModelViewSet):
     @extend_schema(tags=['Jobs'], summary='Restore job', operation_id='job_restore')
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
-        job = Job.objects.all_with_deleted().get(pk=pk)
+        try:
+            job = Job.objects.all_with_deleted().get(pk=pk)
+        except Job.DoesNotExist:
+            raise NotFound(f"Job {pk} not found.")
         job.restore()
         return Response({'status': 'restored'})
 

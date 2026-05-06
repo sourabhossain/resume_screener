@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count, Q
 from .models import Job, Resume
 
 
@@ -30,9 +31,16 @@ class JobAdmin(admin.ModelAdmin):
         }),
     )
     
+    def get_queryset(self, request):
+        """Annotate resume count to avoid N+1 queries."""
+        return super().get_queryset(request).annotate(
+            _resume_count=Count('resumes', filter=Q(resumes__is_deleted=False))
+        )
+    
     def resume_count(self, obj):
-        return obj.resumes.filter(is_deleted=False).count()
+        return obj._resume_count
     resume_count.short_description = 'Resumes'
+    resume_count.admin_order_field = '_resume_count'
 
 
 @admin.register(Resume)
@@ -40,6 +48,7 @@ class ResumeAdmin(admin.ModelAdmin):
     list_display = ('candidate_name', 'job', 'final_score', 'tier', 'recommendation', 'created_at', 'is_deleted')
     list_filter = ('tier', 'recommendation', 'job', 'is_deleted')
     search_fields = ('candidate_name', 'job__title')
+    list_select_related = ('job',)  # Prevents N+1 query for job
     date_hierarchy = 'created_at'
     ordering = ('-final_score', '-created_at')
     list_per_page = 25

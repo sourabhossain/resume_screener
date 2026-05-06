@@ -30,12 +30,12 @@ class SoftDeleteModel(models.Model):
     def soft_delete(self):
         self.is_deleted = True
         self.deleted_at = timezone.now()
-        self.save()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
     
     def restore(self):
         self.is_deleted = False
         self.deleted_at = None
-        self.save()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
 
 
 class Job(SoftDeleteModel):
@@ -151,15 +151,4 @@ class Resume(SoftDeleteModel):
         return f"{self.candidate_name} - {self.job.title}"
     
     def save(self, *args, **kwargs):
-        """Auto-calculate tier and recommendation based on final_score."""
-        if self.final_score is not None:
-            if self.final_score >= 80:
-                self.tier = 'top'
-                self.recommendation = 'interview'
-            elif self.final_score >= 60:
-                self.tier = 'mid'
-                self.recommendation = 'talent_pool'
-            else:
-                self.tier = 'low'
-                self.recommendation = 'reject'
         super().save(*args, **kwargs)

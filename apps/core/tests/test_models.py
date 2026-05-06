@@ -78,32 +78,50 @@ class TestResumeModel:
         assert sample_job.title in str(resume)
     
     def test_auto_tier_top(self, sample_job):
-        """Test auto tier assignment for high score."""
-        resume = Resume.objects.create(
-            job=sample_job,
-            candidate_name='Top Candidate',
-            final_score=85
-        )
+        """Test tier assignment for high score via service layer (logic lives in apply_screening_result)."""
+        from apps.core.services.resume_service import ResumeService
+        resume = Resume.objects.create(job=sample_job, candidate_name='Top Candidate')
+        ResumeService.apply_screening_result(resume, {
+            'candidate_name': 'Top Candidate', 'skills': [], 'education': [],
+            'certifications': [], 'experience_years': 0,
+            'matched_skills': [], 'missing_skills': [],
+            'skill_score': 85, 'experience_score': 85, 'education_score': 85,
+            'certification_score': 0, 'final_score': 85,
+            'tier': 'Top', 'recommendation': 'Interview', 'reasoning': '',
+        })
+        resume.refresh_from_db()
         assert resume.tier == 'top'
         assert resume.recommendation == 'interview'
-    
+
     def test_auto_tier_mid(self, sample_job):
-        """Test auto tier assignment for medium score."""
-        resume = Resume.objects.create(
-            job=sample_job,
-            candidate_name='Mid Candidate',
-            final_score=70
-        )
+        """Test tier assignment for medium score via service layer."""
+        from apps.core.services.resume_service import ResumeService
+        resume = Resume.objects.create(job=sample_job, candidate_name='Mid Candidate')
+        ResumeService.apply_screening_result(resume, {
+            'candidate_name': 'Mid Candidate', 'skills': [], 'education': [],
+            'certifications': [], 'experience_years': 0,
+            'matched_skills': [], 'missing_skills': [],
+            'skill_score': 70, 'experience_score': 70, 'education_score': 70,
+            'certification_score': 0, 'final_score': 70,
+            'tier': 'Mid', 'recommendation': 'Talent Pool', 'reasoning': '',
+        })
+        resume.refresh_from_db()
         assert resume.tier == 'mid'
         assert resume.recommendation == 'talent_pool'
-    
+
     def test_auto_tier_low(self, sample_job):
-        """Test auto tier assignment for low score."""
-        resume = Resume.objects.create(
-            job=sample_job,
-            candidate_name='Low Candidate',
-            final_score=40
-        )
+        """Test tier assignment for low score via service layer."""
+        from apps.core.services.resume_service import ResumeService
+        resume = Resume.objects.create(job=sample_job, candidate_name='Low Candidate')
+        ResumeService.apply_screening_result(resume, {
+            'candidate_name': 'Low Candidate', 'skills': [], 'education': [],
+            'certifications': [], 'experience_years': 0,
+            'matched_skills': [], 'missing_skills': [],
+            'skill_score': 40, 'experience_score': 40, 'education_score': 40,
+            'certification_score': 0, 'final_score': 40,
+            'tier': 'Low', 'recommendation': 'Reject', 'reasoning': '',
+        })
+        resume.refresh_from_db()
         assert resume.tier == 'low'
         assert resume.recommendation == 'reject'
     

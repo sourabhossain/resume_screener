@@ -8,7 +8,8 @@ from typing import Dict, Any, Optional
 
 from django.conf import settings
 from django.core.cache import cache
-from tenacity import retry, stop_after_attempt, wait_exponential
+from openai import APIConnectionError, APITimeoutError, InternalServerError, RateLimitError
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -60,10 +61,17 @@ class LLMClient:
         """Generate cache key from prompt."""
         return f"llm_cache_{hashlib.md5(prompt.encode()).hexdigest()}"
     
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10)
+    # Transient OpenAI / network errors: backoff; reraise so logs show the real exception (not RetryError)
+    _llm_retry = retry(
+        retry=retry_if_exception_type(
+            (RateLimitError, APIConnectionError, APITimeoutError, InternalServerError)
+        ),
+        stop=stop_after_attempt(8),
+        wait=wait_exponential(multiplier=2, min=5, max=120),
+        reraise=True,
     )
+
+    @_llm_retry
     def invoke_json(self, prompt: str, system_prompt: str = "You are a helpful assistant.") -> Dict[str, Any]:
         """
         Invoke LLM and return parsed JSON response.
@@ -99,10 +107,7 @@ class LLMClient:
         
         return result
     
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10)
-    )
+    @_llm_retry
     def invoke_text(self, prompt: str, system_prompt: str = "You are a helpful assistant.") -> str:
         """
         Invoke LLM and return text response.

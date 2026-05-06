@@ -76,15 +76,21 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
                         <label for="id_posted_date" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                            Posted Date
+                            Posted Date <span class="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
                         </label>
                         {{ form.posted_date }}
+                        {% if form.posted_date.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.posted_date.errors.0 }}</p>
+                        {% endif %}
                     </div>
                     <div>
                         <label for="id_closing_date" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                            Application Deadline
+                            Application Deadline <span class="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
                         </label>
                         {{ form.closing_date }}
+                        {% if form.closing_date.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.closing_date.errors.0 }}</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>

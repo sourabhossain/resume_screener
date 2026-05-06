@@ -1,5 +1,68 @@
+import os
+
 from django import forms
 from .models import Job, Resume
+
+
+class FileValidationMixin:
+    """
+    Mixin for file upload validation (PDF, DOC, DOCX).
+    Validates file extension, size, and magic bytes.
+    """
+    
+    ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx']
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+    MAGIC_BYTES = {
+        'pdf': b'%PDF',
+        'docx': b'PK\x03\x04',
+        'doc': b'\xd0\xcf\x11\xe0',
+    }
+    
+    def validate_resume_file(self, file):
+        """Validate file type, size, and content (magic byte check)."""
+        if not file:
+            return file
+        
+        # Check file size
+        if file.size > self.MAX_FILE_SIZE:
+            raise forms.ValidationError('File size must be under 5MB.')
+        
+        # Check extension using os.path.splitext to handle multi-dot filenames safely
+        _, raw_ext = os.path.splitext(file.name)
+        ext = raw_ext.lstrip('.').lower()
+        if ext not in self.ALLOWED_EXTENSIONS:
+            raise forms.ValidationError(
+                f'Invalid file type. Allowed: {", ".join(self.ALLOWED_EXTENSIONS).upper()}'
+            )
+        
+        # Check magic bytes
+        file.seek(0)
+        header = file.read(8)
+        file.seek(0)
+        
+        expected_magic = self.MAGIC_BYTES.get(ext)
+        if expected_magic and not header.startswith(expected_magic):
+            raise forms.ValidationError(
+                f'File content does not match {ext.upper()} format. Please upload a valid file.'
+            )
+        
+        return file
+
+
+class FileSaveMixin:
+    """Mixin to handle file metadata on save."""
+    
+    def save_with_file_metadata(self, commit=True):
+        """Save instance with file_name and file_type populated."""
+        instance = super().save(commit=False)
+        file = self.cleaned_data.get('file')
+        if file:
+            instance.file_name = file.name
+            _, raw_ext = os.path.splitext(file.name)
+            instance.file_type = raw_ext.lstrip('.').lower()
+        if commit:
+            instance.save()
+        return instance
 
 
 class JobForm(forms.ModelForm):
@@ -37,9 +100,26 @@ class JobForm(forms.ModelForm):
             'posted_date': 'Posted Date',
             'closing_date': 'Application Deadline',
         }
+        help_texts = {
+            'posted_date': 'Optional.',
+            'closing_date': 'Optional.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['posted_date'].required = False
+        self.fields['closing_date'].required = False
+
+    def clean(self):
+        data = super().clean()
+        posted = data.get('posted_date')
+        closing = data.get('closing_date')
+        if posted and closing and closing < posted:
+            self.add_error('closing_date', 'Application deadline cannot be before the posted date.')
+        return data
 
 
-class ResumeForm(forms.ModelForm):
+class ResumeForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
     """Form for creating and editing resumes - only name and file required, AI handles the rest."""
     
     class Meta:
@@ -61,49 +141,15 @@ class ResumeForm(forms.ModelForm):
         }
     
     def clean_file(self):
-        """Validate file type, size, and content (magic byte check)."""
-        file = self.cleaned_data.get('file')
-        if file:
-            max_size = 5 * 1024 * 1024
-            if file.size > max_size:
-                raise forms.ValidationError('File size must be under 5MB.')
-            
-
-            allowed_extensions = ['pdf', 'doc', 'docx']
-            ext = file.name.split('.')[-1].lower()
-            if ext not in allowed_extensions:
-                raise forms.ValidationError(
-                    f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
-                )
-            
-            file.seek(0)
-            header = file.read(8)
-            file.seek(0)
-            
-            magic_bytes = {
-                'pdf': b'%PDF',
-                'docx': b'PK\x03\x04',
-                'doc': b'\xd0\xcf\x11\xe0',
-            }
-            
-            expected_magic = magic_bytes.get(ext)
-            if expected_magic and not header.startswith(expected_magic):
-                raise forms.ValidationError(
-                    f'File content does not match {ext.upper()} format. Please upload a valid file.'
-                )
-        return file
+        """Validate uploaded file using mixin."""
+        return self.validate_resume_file(self.cleaned_data.get('file'))
     
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        if self.cleaned_data.get('file'):
-            instance.file_name = self.cleaned_data['file'].name
-            instance.file_type = self.cleaned_data['file'].name.split('.')[-1].lower()
-        if commit:
-            instance.save()
-        return instance
+        """Save with file metadata using mixin."""
+        return self.save_with_file_metadata(commit)
 
 
-class ResumeEditForm(forms.ModelForm):
+class ResumeEditForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
     """Form for editing resumes - includes AI-generated fields that can be manually adjusted."""
     
     class Meta:
@@ -158,43 +204,9 @@ class ResumeEditForm(forms.ModelForm):
         }
     
     def clean_file(self):
-        """Validate file type, size, and content (magic byte check)."""
-        file = self.cleaned_data.get('file')
-        if file:
-            max_size = 5 * 1024 * 1024
-            if file.size > max_size:
-                raise forms.ValidationError('File size must be under 5MB.')
-            
-            allowed_extensions = ['pdf', 'doc', 'docx']
-            ext = file.name.split('.')[-1].lower()
-            if ext not in allowed_extensions:
-                raise forms.ValidationError(
-                    f'Invalid file type. Allowed: {", ".join(allowed_extensions).upper()}'
-                )
-            
-
-            file.seek(0)
-            header = file.read(8)
-            file.seek(0)
-            
-            magic_bytes = {
-                'pdf': b'%PDF',
-                'docx': b'PK\x03\x04',
-                'doc': b'\xd0\xcf\x11\xe0',
-            }
-            
-            expected_magic = magic_bytes.get(ext)
-            if expected_magic and not header.startswith(expected_magic):
-                raise forms.ValidationError(
-                    f'File content does not match {ext.upper()} format.'
-                )
-        return file
+        """Validate uploaded file using mixin."""
+        return self.validate_resume_file(self.cleaned_data.get('file'))
     
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        if self.cleaned_data.get('file'):
-            instance.file_name = self.cleaned_data['file'].name
-            instance.file_type = self.cleaned_data['file'].name.split('.')[-1].lower()
-        if commit:
-            instance.save()
-        return instance
+        """Save with file metadata using mixin."""
+        return self.save_with_file_metadata(commit)
