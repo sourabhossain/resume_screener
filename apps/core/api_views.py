@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Count
+from django.db.models import Count, Prefetch, Q
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from drf_spectacular.utils import extend_schema, extend_schema_view
@@ -39,7 +39,15 @@ class JobViewSet(viewsets.ModelViewSet):
         return JobDetailSerializer
     
     def get_queryset(self):
-        queryset = Job.objects.annotate(resume_count=Count('resumes'))
+        queryset = Job.objects.annotate(
+            resume_count=Count('resumes', filter=Q(resumes__is_deleted=False))
+        ).prefetch_related(
+            Prefetch(
+                'resumes',
+                queryset=Resume.objects.filter(is_deleted=False),
+                to_attr='_active_resumes',
+            )
+        )
         search = self.request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(title__icontains=search)

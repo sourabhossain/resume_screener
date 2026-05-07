@@ -44,7 +44,7 @@ class RankingResult(TypedDict):
     reasoning: str
 
 
-class ScreeningResult(TypedDict):
+class ScreeningResult(TypedDict, total=False):
     """Complete screening result returned by screen_resume()."""
     # Extraction
     candidate_name: str
@@ -52,25 +52,28 @@ class ScreeningResult(TypedDict):
     experience_years: float
     education: List[str]
     certifications: List[str]
-    
+    achievements: List[str]
+
     # Matching
     matched_skills: List[str]
     missing_skills: List[str]
     experience_match_score: float
     education_match_score: float
-    
+    certification_match_score: Optional[float]
+    achievement_score: float
+
     # Scoring
     skill_score: float
     experience_score: float
     education_score: float
     certification_score: float
     final_score: float
-    
+
     # Ranking
     tier: str
     recommendation: str
     reasoning: str
-    
+
     # Error tracking
     error: Optional[str]
 

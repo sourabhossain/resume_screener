@@ -8,6 +8,13 @@ from django.test import Client
 load_dotenv()
 
 
+@pytest.fixture(autouse=True)
+def _stub_verify_resume_links_delay(monkeypatch):
+    """Avoid real Celery/network during ResumeService.apply_screening_result in tests."""
+    from apps.core.tasks import verify_resume_links_task
+
+    monkeypatch.setattr(verify_resume_links_task, 'delay', lambda *a, **kw: None)
+
 
 @pytest.fixture
 def client():

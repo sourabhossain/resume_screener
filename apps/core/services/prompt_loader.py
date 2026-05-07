@@ -1,10 +1,10 @@
 """
 Prompt Loader - Loads and formats prompt templates from files.
 """
-import os
+import datetime
 from pathlib import Path
 from functools import lru_cache
-from typing import Dict, Any
+from typing import Any
 
 PROMPTS_DIR = Path(__file__).parent.parent / 'prompts'
 
@@ -48,8 +48,9 @@ def format_prompt(prompt_name: str, **kwargs: Any) -> str:
 
 
 def get_extraction_prompt(resume_text: str) -> str:
-    """Get formatted extraction prompt for resume parsing."""
-    return format_prompt('extraction', resume_text=resume_text)
+    """Get formatted extraction prompt for resume parsing (uses tech/ role by default)."""
+    current_year = datetime.date.today().year
+    return format_prompt('tech/extraction', resume_text=resume_text, current_year=current_year)
 
 
 def get_matching_prompt(
@@ -60,15 +61,16 @@ def get_matching_prompt(
     education: str,
     certifications: str
 ) -> str:
-    """Get formatted matching prompt for job-resume comparison."""
+    """Get formatted matching prompt for job-resume comparison (uses tech/ role by default)."""
     return format_prompt(
-        'matching',
+        'tech/matching',
         job_description=job_description,
         candidate_name=candidate_name,
         skills=skills,
         experience_years=experience_years,
         education=education,
-        certifications=certifications
+        certifications=certifications,
+        achievements=''
     )
 
 

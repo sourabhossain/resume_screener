@@ -26,13 +26,16 @@ SCORING INSTRUCTIONS:
    - 60: Different field but relevant qualifications
    - 40: Some education but not matching requirements
    - 20: Minimal formal education
+5. certification_match_score (0-100): How well the candidate's certifications align with job-required or relevant technical/professional credentials (relevance, rigor). Use 0 if none listed or irrelevant.
 
 Return ONLY valid JSON with this exact structure:
 {{
     "matched_skills": ["skill1", "skill2", ...],
     "missing_skills": ["skill1", "skill2", ...],
     "experience_match_score": 0.0,
-    "education_match_score": 0.0
+    "education_match_score": 0.0,
+    "certification_match_score": 0.0,
+    "achievement_score": 0.0
 }}
 
 Be fair in evaluation. Consider that experience in different domains still has value.

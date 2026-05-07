@@ -20,7 +20,7 @@
 
         <!-- Login Card -->
         <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-dark-900/50 border border-gray-100 dark:border-dark-700 p-8 animate-fade-in" style="animation-delay: 0.1s">
-            <form method="post" class="space-y-6">
+            <form method="post" class="space-y-6" x-data="{ submitting: false }" @submit="submitting = true">
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
@@ -86,11 +86,23 @@
                 </div>
 
                 <!-- Submit Button -->
-                <button type="submit" class="w-full btn-primary text-white py-3.5 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-2 text-lg">
-                    <span>Sign In</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                <button type="submit"
+                        :disabled="submitting"
+                        :class="{ 'opacity-50 cursor-not-allowed': submitting }"
+                        class="w-full btn-primary text-white py-3.5 rounded-xl font-semibold shadow-lg flex items-center justify-center gap-2 text-lg transition-all">
+                    <svg x-show="submitting" class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                     </svg>
+                    <template x-if="!submitting">
+                        <span class="flex items-center gap-2">
+                            <span>Sign In</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </span>
+                    </template>
+                    <span x-show="submitting">Signing in...</span>
                 </button>
             </form>
         </div>

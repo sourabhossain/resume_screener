@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from django.db.models import F
 from django.utils import timezone
 
 
@@ -121,8 +123,10 @@ class Resume(SoftDeleteModel):
     skills = models.JSONField(default=list, blank=True, help_text="Extracted skills from resume")
     education = models.JSONField(default=list, blank=True, help_text="Extracted education")
     certifications = models.JSONField(default=list, blank=True, help_text="Extracted certifications")
+    achievements = models.JSONField(default=list, blank=True, help_text="Extracted quantifiable achievements")
     experience_years = models.FloatField(null=True, blank=True, help_text="Total years of experience")
     certification_score = models.FloatField(null=True, blank=True)
+    achievement_score = models.FloatField(null=True, blank=True)
     reasoning = models.TextField(blank=True, help_text="AI reasoning for recommendation")
     
     SCREENING_STATUS_CHOICES = [
@@ -132,14 +136,31 @@ class Resume(SoftDeleteModel):
         ('failed', 'Failed'),
     ]
     screening_status = models.CharField(
-        max_length=20, 
-        choices=SCREENING_STATUS_CHOICES, 
+        max_length=20,
+        choices=SCREENING_STATUS_CHOICES,
         default='pending'
     )
+
+    # Link Verification
+    extracted_links = models.JSONField(default=list, blank=True)
+    verification_results = models.JSONField(default=dict, blank=True)
+    verification_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('processing', 'Processing'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed'),
+            ('skipped', 'Skipped'),
+        ],
+        default='pending'
+    )
+    verification_score = models.FloatField(null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
     
     class Meta:
         db_table = 'resumes'
-        ordering = ['-final_score', '-created_at']
+        ordering = [F('final_score').desc(nulls_last=True), '-created_at']
         indexes = [
             models.Index(fields=['job', 'is_deleted'], name='resume_job_deleted_idx'),
             models.Index(fields=['tier'], name='resume_tier_idx'),
@@ -149,6 +170,23 @@ class Resume(SoftDeleteModel):
     
     def __str__(self):
         return f"{self.candidate_name} - {self.job.title}"
-    
+
+    def assign_tier_and_recommendation_from_final_score(self) -> None:
+        """Align tier and decision with final_score using AI_SCREENING_CONFIG thresholds."""
+        if self.final_score is None:
+            return
+        cfg = settings.AI_SCREENING_CONFIG
+        score = self.final_score
+        if score >= cfg['TOP_TIER_THRESHOLD']:
+            self.tier = 'top'
+            self.recommendation = 'interview'
+        elif score >= cfg['MID_TIER_THRESHOLD']:
+            self.tier = 'mid'
+            self.recommendation = 'talent_pool'
+        else:
+            self.tier = 'low'
+            self.recommendation = 'reject'
+
     def save(self, *args, **kwargs):
+        self.assign_tier_and_recommendation_from_final_score()
         super().save(*args, **kwargs)

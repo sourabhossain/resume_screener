@@ -4,7 +4,7 @@ OpenAI LLM Client with caching and retry logic.
 import hashlib
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from django.conf import settings
 from django.core.cache import cache
@@ -66,8 +66,8 @@ class LLMClient:
         retry=retry_if_exception_type(
             (RateLimitError, APIConnectionError, APITimeoutError, InternalServerError)
         ),
-        stop=stop_after_attempt(8),
-        wait=wait_exponential(multiplier=2, min=5, max=120),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=4, max=30),
         reraise=True,
     )
 

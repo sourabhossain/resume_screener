@@ -358,13 +358,15 @@
             
             <!-- Mobile Search -->
             <div class="p-4">
-                <div class="relative">
-                    <input type="text" placeholder="Search jobs..." 
-                           class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
+                <form method="get" action="{% url 'core:job_list' %}" @submit="mobileMenuOpen = false">
+                    <div class="relative">
+                        <input type="text" name="q" placeholder="Search jobs..."
+                               class="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-dark-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </form>
             </div>
             
             <!-- Mobile Nav Links -->
@@ -440,12 +442,16 @@
         {% for message in messages %}
         <div class="mb-3 p-4 rounded-xl flex items-center gap-3 {% if message.tags == 'success' %}bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800{% elif message.tags == 'error' %}bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800{% else %}bg-sky-50 dark:bg-sky-900/20 text-sky-800 dark:text-sky-200 border border-sky-200 dark:border-sky-800{% endif %} animate-fade-in">
             {% if message.tags == 'success' %}
-            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             {% elif message.tags == 'error' %}
-            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            {% else %}
+            <svg class="w-5 h-5 text-sky-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
             {% endif %}
             <span class="font-medium">{{ message }}</span>
@@ -470,7 +476,7 @@
                     </div>
                     <span class="font-semibold text-gray-700 dark:text-gray-200">ResumeAI</span>
                 </div>
-                <p class="text-gray-500 dark:text-gray-400 text-sm">© 2025 ResumeAI. AI-Powered Resume Screening System.</p>
+                <p class="text-gray-500 dark:text-gray-400 text-sm">© {% now "Y" %} ResumeAI. AI-Powered Resume Screening System.</p>
             </div>
         </div>
     </footer>

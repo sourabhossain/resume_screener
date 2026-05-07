@@ -1,20 +1,41 @@
 """
 AI Resume Screening Engine using LangGraph.
 Implements the full screening workflow: Extract → Match → Score → Rank
+Supports role-based prompt routing for 8 job types.
 """
+import datetime
 import logging
 from enum import Enum
 from functools import lru_cache
+from pathlib import Path
 from typing import TypedDict, List, Dict, Any, Optional
 
 from django.conf import settings
 from langgraph.graph import StateGraph, END
 
 from .llm_client import llm_client
-from .prompt_loader import get_extraction_prompt, get_matching_prompt, get_reasoning_prompt
+from .prompt_loader import get_reasoning_prompt
 
 logger = logging.getLogger(__name__)
 
+PROMPTS_DIR = Path(__file__).parent.parent / 'prompts'
+
+
+@lru_cache(maxsize=32)
+def _load_prompt_cached(path: Path) -> str:
+    """Load and cache a prompt file by its absolute path."""
+    return Path(path).read_text(encoding='utf-8')
+
+VALID_JOB_TYPES = {
+    'tech',
+    'sales_marketing',
+    'hr_recruitment',
+    'finance_admin',
+    'design_creative',
+    'operations_support',
+    'project_management',
+    'product_management',
+}
 
 
 class Tier(str, Enum):
@@ -33,17 +54,21 @@ class ResumeScreeningState(TypedDict):
     resume_text: str
     job_description: str
     resume_id: int
+    job_type: str
 
     candidate_name: str
     skills: List[str]
     experience_years: float
     education: List[str]
     certifications: List[str]
+    achievements: List[str]
 
     matched_skills: List[str]
     missing_skills: List[str]
     experience_match_score: float
     education_match_score: float
+    certification_match_score: Optional[float]
+    achievement_score: float
 
     skill_score: float
     experience_score: float
@@ -58,24 +83,70 @@ class ResumeScreeningState(TypedDict):
     error: Optional[str]
 
 
+def detect_job_type(job_description: str) -> str:
+    """
+    Detect job type from description using LLM.
+    Falls back to 'tech' on any error.
+    """
+    try:
+        config = settings.AI_SCREENING_CONFIG
+        job_desc = job_description[:config['MAX_JOB_DESC_CHARS']]
+        detector_path = PROMPTS_DIR / 'job_type_detector.txt'
+        template = detector_path.read_text(encoding='utf-8')
+        prompt = template.format(job_description=job_desc)
+        response = llm_client.invoke_json(prompt, "You are a job classification expert.")
+        job_type = response.get('job_type', 'tech')
+        if job_type not in VALID_JOB_TYPES:
+            logger.warning(f"Unknown job_type '{job_type}' returned by detector, falling back to 'tech'")
+            return 'tech'
+        logger.info(f"Detected job_type='{job_type}' (confidence={response.get('confidence', '?')})")
+        return job_type
+    except Exception as e:
+        logger.warning(f"Job type detection failed: {e}. Falling back to 'tech'")
+        return 'tech'
+
+
+def get_prompt_path(job_type: str, prompt_name: str) -> Path:
+    """
+    Return the path to the role-specific prompt file.
+    Falls back to tech/ if the role-specific file does not exist.
+    """
+    role_path = PROMPTS_DIR / job_type / f"{prompt_name}.txt"
+    if role_path.exists():
+        return role_path
+    fallback = PROMPTS_DIR / 'tech' / f"{prompt_name}.txt"
+    if not fallback.exists():
+        raise FileNotFoundError(f"Prompt not found: {role_path} and fallback {fallback} missing")
+    logger.warning(f"No {prompt_name} prompt for role '{job_type}', using tech/ fallback")
+    return fallback
+
 
 def extract_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Extract candidate profile from resume text."""
+    """Extract candidate profile from resume text using role-specific prompt."""
     try:
         config = settings.AI_SCREENING_CONFIG
         resume_text = state['resume_text'][:config['MAX_RESUME_CHARS']]
-        
-        prompt = get_extraction_prompt(resume_text=resume_text)
+        job_type = state.get('job_type', 'tech')
+        current_year = datetime.date.today().year
+
+        prompt_path = get_prompt_path(job_type, 'extraction')
+        template = _load_prompt_cached(prompt_path)
+        prompt = template.format(resume_text=resume_text, current_year=current_year)
+
         response = llm_client.invoke_json(prompt, "You are an expert resume parser.")
-        
+
         state['candidate_name'] = response.get('candidate_name', 'Unknown')
         state['skills'] = response.get('skills', [])
         state['experience_years'] = float(response.get('experience_years', 0))
         state['education'] = response.get('education', [])
         state['certifications'] = response.get('certifications', [])
-        
-        logger.info(f"Extracted profile for: {state['candidate_name']}")
-        
+        state['achievements'] = response.get('achievements', [])
+
+        logger.info(
+            f"[Resume {state.get('resume_id')}] Extracted profile for: {state['candidate_name']} "
+            f"(role={job_type})"
+        )
+
     except Exception as e:
         logger.error(f"[Resume {state.get('resume_id')}] Extraction failed: {e}")
         state['error'] = str(e)
@@ -84,21 +155,27 @@ def extract_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
 
 def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Match candidate profile against job requirements."""
+    """Match candidate profile against job requirements using role-specific prompt."""
     if state.get('error'):
         return state
 
     try:
         config = settings.AI_SCREENING_CONFIG
         job_desc = state['job_description'][:config['MAX_JOB_DESC_CHARS']]
+        job_type = state.get('job_type', 'tech')
 
-        prompt = get_matching_prompt(
+        prompt_path = get_prompt_path(job_type, 'matching')
+        template = _load_prompt_cached(prompt_path)
+
+        achievements_str = "; ".join(state.get('achievements', []))
+        prompt = template.format(
             job_description=job_desc,
             candidate_name=state['candidate_name'],
             skills=", ".join(state['skills']),
             experience_years=state['experience_years'],
             education=", ".join(state['education']),
-            certifications=", ".join(state['certifications'])
+            certifications=", ".join(state['certifications']),
+            achievements=achievements_str,
         )
 
         response = llm_client.invoke_json(prompt, "You are an expert HR analyst.")
@@ -107,8 +184,21 @@ def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
         state['missing_skills'] = response.get('missing_skills', [])
         state['experience_match_score'] = float(response.get('experience_match_score', 0))
         state['education_match_score'] = float(response.get('education_match_score', 0))
+        state['achievement_score'] = float(response.get('achievement_score', 0))
 
-        logger.info(f"[Resume {state.get('resume_id')}] Matched {len(state['matched_skills'])} skills for {state['candidate_name']}")
+        raw_cert = response.get('certification_match_score')
+        if raw_cert is not None:
+            try:
+                state['certification_match_score'] = float(raw_cert)
+            except (TypeError, ValueError):
+                state['certification_match_score'] = None
+        else:
+            state['certification_match_score'] = None
+
+        logger.info(
+            f"[Resume {state.get('resume_id')}] Matched {len(state['matched_skills'])} skills "
+            f"for {state['candidate_name']}"
+        )
 
     except Exception as e:
         logger.error(f"[Resume {state.get('resume_id')}] Matching failed: {e}")
@@ -118,32 +208,52 @@ def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
 
 def score_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Calculate weighted scores."""
+    """Calculate weighted scores. Tech uses 4-factor weights; all other roles add achievement_score."""
     if state.get('error'):
         return state
 
     try:
         config = settings.AI_SCREENING_CONFIG
+        job_type = state.get('job_type', 'tech')
 
         total_skills = len(state['matched_skills']) + len(state['missing_skills'])
-        if total_skills > 0:
-            state['skill_score'] = (len(state['matched_skills']) / total_skills) * 100
-        else:
-            state['skill_score'] = 0
+        state['skill_score'] = (len(state['matched_skills']) / total_skills) * 100 if total_skills > 0 else 0
 
         state['experience_score'] = state['experience_match_score']
         state['education_score'] = state['education_match_score']
 
-        state['certification_score'] = min(len(state['certifications']) * 25, 100)
+        cm = state.get('certification_match_score')
+        if cm is not None:
+            try:
+                state['certification_score'] = min(max(float(cm), 0.0), 100.0)
+            except (TypeError, ValueError):
+                state['certification_score'] = min(len(state['certifications']) * 25, 100)
+        else:
+            state['certification_score'] = min(len(state['certifications']) * 25, 100)
 
-        state['final_score'] = (
-            state['skill_score'] * config['SKILL_WEIGHT'] +
-            state['experience_score'] * config['EXPERIENCE_WEIGHT'] +
-            state['education_score'] * config['EDUCATION_WEIGHT'] +
-            state['certification_score'] * config['CERTIFICATION_WEIGHT']
+        if job_type == 'tech':
+            state['final_score'] = (
+                state['skill_score'] * config['SKILL_WEIGHT'] +
+                state['experience_score'] * config['EXPERIENCE_WEIGHT'] +
+                state['education_score'] * config['EDUCATION_WEIGHT'] +
+                state['certification_score'] * config['CERTIFICATION_WEIGHT']
+            )
+        else:
+            # Non-tech roles: achievements carry 20% weight; other weights adjusted down.
+            # Use 'or 0.0' to safely handle None (e.g. if match_node errored but was recovered).
+            achievement_score = state.get('achievement_score') or 0.0
+            state['final_score'] = (
+                state['skill_score'] * config['NON_TECH_SKILL_WEIGHT'] +
+                state['experience_score'] * config['NON_TECH_EXPERIENCE_WEIGHT'] +
+                state['education_score'] * config['NON_TECH_EDUCATION_WEIGHT'] +
+                state['certification_score'] * config['NON_TECH_CERTIFICATION_WEIGHT'] +
+                achievement_score * config['NON_TECH_ACHIEVEMENT_WEIGHT']
+            )
+
+        logger.info(
+            f"[Resume {state.get('resume_id')}] Scored {state['candidate_name']}: "
+            f"{state['final_score']:.1f}/100 (role={job_type})"
         )
-
-        logger.info(f"[Resume {state.get('resume_id')}] Scored {state['candidate_name']}: {state['final_score']:.1f}/100")
 
     except Exception as e:
         logger.error(f"[Resume {state.get('resume_id')}] Scoring failed: {e}")
@@ -182,7 +292,10 @@ def rank_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
         state['reasoning'] = llm_client.invoke_text(prompt, "You are a hiring manager.")
 
-        logger.info(f"[Resume {state.get('resume_id')}] Ranked {state['candidate_name']}: {state['tier']} ({state['recommendation']})")
+        logger.info(
+            f"[Resume {state.get('resume_id')}] Ranked {state['candidate_name']}: "
+            f"{state['tier']} ({state['recommendation']})"
+        )
 
     except Exception as e:
         logger.error(f"[Resume {state.get('resume_id')}] Ranking failed: {e}")
@@ -195,30 +308,27 @@ def rank_node(state: ResumeScreeningState) -> ResumeScreeningState:
 def get_cached_workflow():
     """Create and cache the LangGraph screening workflow."""
     workflow = StateGraph(ResumeScreeningState)
-    
-    # Add nodes
+
     workflow.add_node("extract", extract_node)
     workflow.add_node("match", match_node)
     workflow.add_node("score", score_node)
     workflow.add_node("rank", rank_node)
-    
-    # Define flow
+
     workflow.set_entry_point("extract")
     workflow.add_edge("extract", "match")
     workflow.add_edge("match", "score")
     workflow.add_edge("score", "rank")
     workflow.add_edge("rank", END)
-    
+
     return workflow.compile()
 
 
-def create_screening_workflow() -> StateGraph:
-    """Create the LangGraph screening workflow (cached)."""
-    return get_cached_workflow()
-
-
-
-def screen_resume(resume_text: str, job_description: str, resume_id: int = 0) -> Dict[str, Any]:
+def screen_resume(
+    resume_text: str,
+    job_description: str,
+    resume_id: int = 0,
+    job_type: str = "",
+) -> Dict[str, Any]:
     """
     Screen a resume against a job description.
 
@@ -226,6 +336,7 @@ def screen_resume(resume_text: str, job_description: str, resume_id: int = 0) ->
         resume_text: Extracted text from resume
         job_description: Job description text
         resume_id: ID of the Resume model instance (for logging correlation)
+        job_type: Role type for prompt routing. Auto-detected via LLM if empty string.
 
     Returns:
         Dictionary with screening results
@@ -238,19 +349,26 @@ def screen_resume(resume_text: str, job_description: str, resume_id: int = 0) ->
             'recommendation': Recommendation.REJECT.value
         }
 
+    # Auto-detect job type if not provided or whitespace-only
+    resolved_job_type = job_type.strip() or detect_job_type(job_description)
+
     initial_state: ResumeScreeningState = {
         'resume_text': resume_text,
         'job_description': job_description,
         'resume_id': resume_id,
+        'job_type': resolved_job_type,
         'candidate_name': '',
         'skills': [],
         'experience_years': 0.0,
         'education': [],
         'certifications': [],
+        'achievements': [],
         'matched_skills': [],
         'missing_skills': [],
         'experience_match_score': 0.0,
         'education_match_score': 0.0,
+        'certification_match_score': None,
+        'achievement_score': 0.0,
         'skill_score': 0.0,
         'experience_score': 0.0,
         'education_score': 0.0,
@@ -259,11 +377,10 @@ def screen_resume(resume_text: str, job_description: str, resume_id: int = 0) ->
         'tier': '',
         'recommendation': '',
         'reasoning': '',
-        'error': None
+        'error': None,
     }
-    
 
-    workflow = create_screening_workflow()
+    workflow = get_cached_workflow()
     result = workflow.invoke(initial_state)
-    
+
     return result

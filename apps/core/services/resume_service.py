@@ -3,7 +3,7 @@ Resume Service - Centralized resume processing logic.
 Eliminates code duplication across views and tasks.
 """
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from django.db import transaction
 
@@ -85,7 +85,7 @@ class ResumeService:
         if not resume.raw_text:
             raise AIScreeningError("No resume text available", stage="extraction")
         
-        result = screen_resume(resume.raw_text, resume.job.description, resume_id=resume.id)
+        result = screen_resume(resume.raw_text, resume.job.description, resume_id=resume.id, job_type="")
         
         if result.get('error'):
             raise AIScreeningError(result['error'], stage="screening")
@@ -110,6 +110,7 @@ class ResumeService:
             resume.skills = result.get('skills', [])
             resume.education = result.get('education', [])
             resume.certifications = result.get('certifications', [])
+            resume.achievements = result.get('achievements', [])
             resume.experience_years = round(result.get('experience_years', 0), 1)
             
 
@@ -121,26 +122,20 @@ class ResumeService:
             resume.experience_score = round(result.get('experience_score', 0))
             resume.education_score = round(result.get('education_score', 0))
             resume.certification_score = round(result.get('certification_score', 0))
+            resume.achievement_score = round(float(result.get('achievement_score') or 0))
             resume.final_score = round(result.get('final_score', 0))
-            
 
-            # Derive tier/recommendation from final_score (authoritative source,
-            # moved here from Resume.save() so manual edits are not silently overridden)
-            score = resume.final_score
-            if score >= 80:
-                resume.tier = 'top'
-                resume.recommendation = 'interview'
-            elif score >= 60:
-                resume.tier = 'mid'
-                resume.recommendation = 'talent_pool'
-            else:
-                resume.tier = 'low'
-                resume.recommendation = 'reject'
             resume.reasoning = result.get('reasoning', '')
             
 
             resume.screening_status = 'completed'
             resume.save()
+
+        # on_commit guarantees the task fires only after the outermost transaction
+        # commits — safe even when apply_screening_result is called inside an outer
+        # atomic block (where the inner atomic() degrades to a savepoint).
+        from apps.core.tasks import verify_resume_links_task
+        transaction.on_commit(lambda: verify_resume_links_task.delay(resume.id))
     
     @classmethod
     def process_resume(cls, resume) -> Dict[str, Any]:

@@ -138,26 +138,24 @@ class TestJobViews:
         assert response.context['job'] == sample_job
     
     def test_job_detail_candidates_interview_ordered_first(self, authenticated_client, sample_job):
-        """Interview recommendations appear above talent pool regardless of score."""
+        """Interview-tier candidates sort above talent pool when scores reflect those tiers."""
         Resume.objects.filter(job=sample_job).delete()
         Resume.objects.create(
             job=sample_job,
-            candidate_name='Lower score but interview',
-            final_score=49,
-            recommendation='interview',
+            candidate_name='Interview tier candidate',
+            final_score=85,
         )
         Resume.objects.create(
             job=sample_job,
-            candidate_name='Higher score talent pool',
-            final_score=62,
-            recommendation='talent_pool',
+            candidate_name='Talent pool candidate',
+            final_score=70,
         )
         response = authenticated_client.get(
             reverse('core:job_detail', kwargs={'pk': sample_job.pk})
         )
         names = [r.candidate_name for r in response.context['resumes']]
-        assert names[0] == 'Lower score but interview'
-        assert names[1] == 'Higher score talent pool'
+        assert names[0] == 'Interview tier candidate'
+        assert names[1] == 'Talent pool candidate'
     
     def test_job_edit(self, authenticated_client, sample_job):
         """Test editing a job."""

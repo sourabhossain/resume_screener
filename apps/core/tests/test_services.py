@@ -44,12 +44,12 @@ class TestDocumentExtractor:
             DocumentExtractor.extract("/nonexistent/file.pdf")
     
     def test_is_supported(self):
-        """Test is_supported method."""
+        """Test is_supported method. .doc is no longer supported (python-docx is .docx only)."""
         from apps.core.services.document_extractor import DocumentExtractor
-        
+
         assert DocumentExtractor.is_supported("resume.pdf") is True
         assert DocumentExtractor.is_supported("resume.docx") is True
-        assert DocumentExtractor.is_supported("resume.doc") is True
+        assert DocumentExtractor.is_supported("resume.doc") is False
         assert DocumentExtractor.is_supported("resume.txt") is True
         assert DocumentExtractor.is_supported("resume.xyz") is False
 
@@ -137,6 +137,8 @@ class TestResumeService:
             'education_score': 85.0,
             'certification_score': 25.0,
             'final_score': 82.5,
+            'achievement_score': 88.0,
+            'achievements': ['Shipped billing refactor'],
             'tier': 'Top',
             'recommendation': 'Interview',
             'reasoning': 'Strong candidate'
@@ -149,6 +151,8 @@ class TestResumeService:
         assert sample_resume.final_score == 82  # Rounded
         assert sample_resume.tier == 'top'
         assert sample_resume.screening_status == 'completed'
+        assert sample_resume.achievements == ['Shipped billing refactor']
+        assert sample_resume.achievement_score == 88
 
 
 @pytest.mark.django_db

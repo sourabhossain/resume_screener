@@ -135,3 +135,13 @@ class TestResumeModel:
         assert resumes[0].candidate_name == 'High'
         assert resumes[1].candidate_name == 'Mid'
         assert resumes[2].candidate_name == 'Low'
+
+    def test_save_derives_tier_from_final_score(self, sample_job):
+        """Tier and recommendation stay aligned with final_score on save."""
+        resume = Resume.objects.create(
+            job=sample_job,
+            candidate_name='Tier Sync',
+            final_score=72,
+        )
+        assert resume.tier == 'mid'
+        assert resume.recommendation == 'talent_pool'

@@ -1,18 +1,16 @@
 """
 Document text extraction from PDF and DOCX files.
 """
-import os
 from pathlib import Path
-from typing import Optional
 
-import PyPDF2
+from pypdf import PdfReader
 import docx
 
 
 class DocumentExtractor:
     """Extract text content from resume documents."""
     
-    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.doc', '.txt'}
+    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt'}
     
     @classmethod
     def extract(cls, file_path: str) -> str:
@@ -38,7 +36,7 @@ class DocumentExtractor:
         
         if extension == '.pdf':
             return cls._extract_from_pdf(file_path)
-        elif extension in {'.docx', '.doc'}:
+        elif extension == '.docx':
             return cls._extract_from_docx(file_path)
         elif extension == '.txt':
             return cls._extract_from_txt(file_path)
@@ -51,7 +49,7 @@ class DocumentExtractor:
         text_parts = []
         
         with open(file_path, 'rb') as file:
-            reader = PyPDF2.PdfReader(file)
+            reader = PdfReader(file)
             for page in reader.pages:
                 page_text = page.extract_text()
                 if page_text:

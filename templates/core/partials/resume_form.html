@@ -4,59 +4,59 @@
         
         <div class="space-y-6">
             <div>
-                <label for="id_candidate_name" class="block text-sm font-semibold text-gray-700 mb-2">
+                <label for="id_candidate_name" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Candidate Name <span class="text-red-500">*</span>
                 </label>
                 {{ form.candidate_name }}
                 {% if form.candidate_name.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.candidate_name.errors.0 }}</p>
+                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.candidate_name.errors.0 }}</p>
                 {% endif %}
             </div>
-            
+
             <div>
-                <label for="id_file" class="block text-sm font-semibold text-gray-700 mb-2">
+                <label for="id_file" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Resume File <span class="text-red-500">*</span>
                 </label>
                 {{ form.file }}
                 {% if resume.file %}
-                <p class="mt-2 text-sm text-gray-500 flex items-center gap-2">
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                     <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     Current: {{ resume.file_name }}
                 </p>
                 {% endif %}
-                <p class="mt-2 text-xs text-gray-400">PDF, DOC, DOCX supported</p>
+                <p class="mt-2 text-xs text-gray-400 dark:text-gray-500">PDF, DOCX only</p>
             </div>
-            
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="id_tier" class="block text-sm font-semibold text-gray-700 mb-2">Tier</label>
+                    <label for="id_tier" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Tier</label>
                     {{ form.tier }}
                 </div>
                 <div>
-                    <label for="id_recommendation" class="block text-sm font-semibold text-gray-700 mb-2">Recommendation</label>
+                    <label for="id_recommendation" class="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Recommendation</label>
                     {{ form.recommendation }}
                 </div>
             </div>
-            
-            <div class="border-t border-gray-100 pt-6">
-                <h3 class="text-sm font-bold text-gray-900 mb-4">Scores (Optional)</h3>
+
+            <div class="border-t border-gray-100 dark:border-dark-700 pt-6">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white mb-4">Scores (Optional)</h3>
                 <div class="grid grid-cols-4 gap-3">
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Experience</label>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Experience</label>
                         {{ form.experience_score }}
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Education</label>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Education</label>
                         {{ form.education_score }}
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Skills</label>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Skills</label>
                         {{ form.skills_score }}
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Final</label>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Final</label>
                         {{ form.final_score }}
                     </div>
                 </div>

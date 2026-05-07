@@ -42,7 +42,9 @@ def screen_resume_task(self, resume_id: int):
         return {'error': 'timeout', 'resume_id': resume_id}
 
     except Resume.DoesNotExist:
-        logger.error(f"Resume {resume_id} not found")
+        logger.error(f"Resume {resume_id} not found — may have been deleted")
+        # Use all_objects to reach the soft-deleted row and prevent it staying 'processing'
+        Resume.all_objects.filter(id=resume_id).update(screening_status='failed')
         return {'error': 'Resume not found'}
 
     except Exception as e:
@@ -66,6 +68,77 @@ def screen_resume_task(self, resume_id: int):
         raise self.retry(exc=e, countdown=60)
 
 
+@shared_task(
+    bind=True,
+    max_retries=2,
+    soft_time_limit=180,
+    time_limit=210,
+    acks_late=True,
+)
+def verify_resume_links_task(self, resume_id: int):
+    """
+    Crawl and verify all links found in a resume.
+    Runs after screening is complete.
+    """
+    from apps.core.models import Resume
+    from apps.core.services.link_verifier import LinkVerifier
+    from celery.exceptions import SoftTimeLimitExceeded
+
+    try:
+        resume = Resume.objects.get(id=resume_id)
+    except Resume.DoesNotExist:
+        logger.error(f"Resume {resume_id} not found for link verification")
+        Resume.all_objects.filter(id=resume_id).update(verification_status='failed')
+        return {'error': 'Resume not found'}
+
+    try:
+        resume.verification_status = 'processing'
+        resume.save(update_fields=['verification_status'])
+
+        result = LinkVerifier.verify_resume(resume)
+
+        status = result.get('status', 'completed')
+        if status == 'skipped':
+            resume.verification_status = 'skipped'
+        elif status == 'failed':
+            resume.verification_status = 'failed'
+        else:
+            resume.verification_status = status
+
+        resume.verification_results = result
+        resume.verification_score = result.get('verification_score')
+
+        from django.utils import timezone
+
+        if resume.verification_status == 'completed':
+            resume.verified_at = timezone.now()
+        else:
+            resume.verified_at = None
+
+        resume.save(update_fields=[
+            'verification_results', 'verification_score',
+            'verification_status', 'verified_at'
+        ])
+
+        return result
+
+    except SoftTimeLimitExceeded:
+        logger.error(f"Link verification timed out for resume {resume_id}")
+        Resume.objects.filter(id=resume_id).update(
+            verification_status='failed', verified_at=None
+        )
+        return {'error': 'timeout'}
+    except Exception as e:
+        logger.exception(f"Link verification failed for resume {resume_id}: {e}")
+        try:
+            Resume.objects.filter(id=resume_id).update(
+                verification_status='failed', verified_at=None
+            )
+        except Exception as update_err:
+            logger.warning(f"Could not update verification status: {update_err}")
+        raise self.retry(exc=e, countdown=30)
+
+
 @shared_task
 def batch_screen_resumes(job_id: int):
     """
@@ -76,20 +149,21 @@ def batch_screen_resumes(job_id: int):
     """
     from apps.core.models import Resume
 
-    # Cap at 500 to avoid unbounded memory usage
-    resume_ids = list(
-        Resume.objects.filter(
-            job_id=job_id,
-            screening_status='pending',
-            is_deleted=False
-        ).values_list('id', flat=True)[:500]
-    )
+    # select_for_update(skip_locked=True) + atomic prevents concurrent calls from
+    # dispatching the same resumes twice (race condition fix)
+    with transaction.atomic():
+        resume_ids = list(
+            Resume.objects.select_for_update(skip_locked=True).filter(
+                job_id=job_id,
+                screening_status='pending',
+                is_deleted=False,
+            ).values_list('id', flat=True)[:500]
+        )
 
-    if not resume_ids:
-        return {'queued': 0}
+        if not resume_ids:
+            return {'queued': 0}
 
-    # Bulk update to 'processing' before queuing to prevent duplicate task dispatch
-    Resume.objects.filter(id__in=resume_ids).update(screening_status='processing')
+        Resume.objects.filter(id__in=resume_ids).update(screening_status='processing')
 
     for resume_id in resume_ids:
         screen_resume_task.delay(resume_id)

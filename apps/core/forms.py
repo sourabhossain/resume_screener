@@ -6,16 +6,15 @@ from .models import Job, Resume
 
 class FileValidationMixin:
     """
-    Mixin for file upload validation (PDF, DOC, DOCX).
+    Mixin for file upload validation (PDF, DOCX).
     Validates file extension, size, and magic bytes.
     """
     
-    ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx']
+    ALLOWED_EXTENSIONS = ['pdf', 'docx']
     MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
     MAGIC_BYTES = {
         'pdf': b'%PDF',
         'docx': b'PK\x03\x04',
-        'doc': b'\xd0\xcf\x11\xe0',
     }
     
     def validate_resume_file(self, file):
@@ -31,9 +30,7 @@ class FileValidationMixin:
         _, raw_ext = os.path.splitext(file.name)
         ext = raw_ext.lstrip('.').lower()
         if ext not in self.ALLOWED_EXTENSIONS:
-            raise forms.ValidationError(
-                f'Invalid file type. Allowed: {", ".join(self.ALLOWED_EXTENSIONS).upper()}'
-            )
+            raise forms.ValidationError('Invalid file type. Allowed: PDF or DOCX only.')
         
         # Check magic bytes
         file.seek(0)
@@ -132,7 +129,7 @@ class ResumeForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
             }),
             'file': forms.FileInput(attrs={
                 'class': 'form-input-file',
-                'accept': '.pdf,.doc,.docx'
+                'accept': '.pdf,.docx'
             }),
         }
         labels = {
@@ -154,8 +151,9 @@ class ResumeEditForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
     
     class Meta:
         model = Resume
-        fields = ['candidate_name', 'file', 'tier', 'recommendation', 
-                  'experience_score', 'education_score', 'skills_score', 'final_score']
+        fields = ['candidate_name', 'file',
+                  'experience_score', 'education_score', 'skills_score',
+                  'certification_score', 'achievement_score', 'final_score']
         widgets = {
             'candidate_name': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -163,13 +161,7 @@ class ResumeEditForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
             }),
             'file': forms.FileInput(attrs={
                 'class': 'form-input-file',
-                'accept': '.pdf,.doc,.docx'
-            }),
-            'tier': forms.Select(attrs={
-                'class': 'form-input'
-            }),
-            'recommendation': forms.Select(attrs={
-                'class': 'form-input'
+                'accept': '.pdf,.docx'
             }),
             'experience_score': forms.NumberInput(attrs={
                 'class': 'form-input',
@@ -186,6 +178,16 @@ class ResumeEditForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
                 'step': '0.1', 'min': '0', 'max': '100',
                 'placeholder': '0-100'
             }),
+            'certification_score': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'step': '0.1', 'min': '0', 'max': '100',
+                'placeholder': '0-100'
+            }),
+            'achievement_score': forms.NumberInput(attrs={
+                'class': 'form-input',
+                'step': '0.1', 'min': '0', 'max': '100',
+                'placeholder': '0-100'
+            }),
             'final_score': forms.NumberInput(attrs={
                 'class': 'form-input',
                 'step': '0.1', 'min': '0', 'max': '100',
@@ -195,11 +197,11 @@ class ResumeEditForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
         labels = {
             'candidate_name': 'Candidate Name',
             'file': 'Resume File',
-            'tier': 'Tier',
-            'recommendation': 'Decision',
             'experience_score': 'Experience Score',
             'education_score': 'Education Score',
             'skills_score': 'Skills Score',
+            'certification_score': 'Certification Score',
+            'achievement_score': 'Achievement Score',
             'final_score': 'Final Score',
         }
     

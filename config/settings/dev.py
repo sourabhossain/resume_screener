@@ -19,17 +19,6 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
 ]
 
-# Development-specific apps
-INSTALLED_APPS += [
-    # 'debug_toolbar',
-]
-
-# Development-specific middleware
-# MIDDLEWARE += [
-#     'debug_toolbar.middleware.DebugToolbarMiddleware',
-# ]
-
-# For Django Debug Toolbar
 INTERNAL_IPS = ['127.0.0.1']
 
 # Email backend for development

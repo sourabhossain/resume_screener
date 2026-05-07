@@ -135,12 +135,11 @@ LOGGING = {
     'handlers': {
         'file': {
             'level': 'INFO',
-            # Daily rotation at midnight UTC; rotated files named app.log.YYYY-MM-DD
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'app.log',
-            'when': 'midnight',
-            'interval': 1,
-            'backupCount': 30,
+            # One file per calendar day: logs/app_YYYY-MM-DD.log (uses TIME_ZONE, UTC in base settings).
+            '()': 'config.logging_handlers.DateNamedFileHandler',
+            'logs_dir': LOGS_DIR,
+            'prefix': 'app',
+            'backup_count': 30,
             'encoding': 'utf-8',
             'formatter': 'verbose',
         },
@@ -224,10 +223,17 @@ OPENAI_MODEL = 'gpt-5-nano-2025-08-07'
 
 # AI Screening Configuration
 AI_SCREENING_CONFIG = {
+    # Tech role weights (sum = 1.0)
     'SKILL_WEIGHT': 0.40,
     'EXPERIENCE_WEIGHT': 0.30,
     'EDUCATION_WEIGHT': 0.20,
     'CERTIFICATION_WEIGHT': 0.10,
+    # Non-tech role weights — includes achievement_score (sum = 1.0)
+    'NON_TECH_SKILL_WEIGHT': 0.30,
+    'NON_TECH_EXPERIENCE_WEIGHT': 0.25,
+    'NON_TECH_EDUCATION_WEIGHT': 0.15,
+    'NON_TECH_CERTIFICATION_WEIGHT': 0.10,
+    'NON_TECH_ACHIEVEMENT_WEIGHT': 0.20,
     'TOP_TIER_THRESHOLD': 80,
     'MID_TIER_THRESHOLD': 60,
     'MAX_RESUME_CHARS': 4000,

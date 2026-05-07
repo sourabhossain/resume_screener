@@ -8,6 +8,7 @@ from django.db.models import Avg, Case, Count, IntegerField, Prefetch, Q, Value,
 from django.http import JsonResponse, FileResponse, Http404
 from django.db import connection
 from django.conf import settings
+from django_ratelimit.decorators import ratelimit
 from .models import Job, Resume
 from .forms import JobForm, ResumeForm, ResumeEditForm
 from .utils import candidate_initial
@@ -50,13 +51,12 @@ def health_check(request):
 @login_required
 def dashboard(request):
     """Dashboard with overview statistics."""
-    # Single query for job counts
     job_stats = Job.objects.aggregate(
         total=Count('id'),
         active=Count('id', filter=Q(status='active'))
     )
-    
-    # Single aggregated query for all resume stats (reduces 8 queries to 1)
+
+    # Reduces 8 separate COUNT queries to 1 aggregated query
     resume_stats = Resume.objects.filter(job__is_deleted=False).aggregate(
         total=Count('id'),
         avg_score=Avg('final_score', filter=Q(final_score__isnull=False)),
@@ -257,11 +257,13 @@ def resume_delete(request, pk):
 
 
 @login_required
+@ratelimit(key='user', rate='60/m', block=True)
 def serve_protected_media(request, path):
     """Serve media files with authentication to prevent unauthenticated access to PII."""
     full_path = os.path.join(settings.MEDIA_ROOT, path)
-    # Prevent path traversal outside MEDIA_ROOT
-    if not os.path.abspath(full_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+    # Prevent path traversal outside MEDIA_ROOT — include os.sep to block sibling directories
+    media_root = os.path.abspath(settings.MEDIA_ROOT) + os.sep
+    if not os.path.abspath(full_path).startswith(media_root):
         raise Http404
     if not os.path.exists(full_path):
         raise Http404
@@ -272,30 +274,16 @@ def serve_protected_media(request, path):
 def resume_rescreen(request, pk):
     """Manually trigger AI screening for a resume."""
     resume = get_object_or_404(Resume, pk=pk)
-    
+
     if request.method != 'POST':
         return redirect('core:resume_detail', pk=pk)
-    
-    try:
-        from apps.core.services.resume_service import ResumeService
-        result = ResumeService.process_resume(resume)
-        
-        if result.get('success'):
-            messages.success(request, f'AI screening completed! Score: {result.get("final_score", 0):.0f}%')
-        else:
-            error_type = result.get('error_type', 'unknown')
-            if error_type == 'extraction':
-                messages.error(request, f'Failed to extract text: {result.get("error")}')
-            elif error_type == 'job_description':
-                messages.error(request, 'Job description is required for screening.')
-            else:
-                messages.error(request, f'Screening failed: {result.get("error")}')
-                
-    except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Re-screening failed: {e}")
-        resume.screening_status = 'failed'
-        resume.save(update_fields=['screening_status'])
-        messages.error(request, f'Screening failed: {str(e)}')
-    
+
+    # Idempotency guard: prevent double-submission from concurrent clicks
+    if resume.screening_status == 'processing':
+        messages.info(request, 'Screening is already in progress. Please wait for it to complete.')
+        return redirect('core:resume_detail', pk=pk)
+
+    from apps.core.tasks import screen_resume_task
+    screen_resume_task.delay(resume.id)
+    messages.success(request, 'AI screening queued! Results will appear shortly.')
     return redirect('core:resume_detail', pk=pk)
