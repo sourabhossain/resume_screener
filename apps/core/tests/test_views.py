@@ -385,9 +385,30 @@ class TestResumeViews:
         )
         assert b'hx-trigger="every 3s"' in response.content
 
-    def test_resume_row_fragment_no_poll_when_done(self, authenticated_client, sample_resume):
-        """Row fragment omits polling trigger when screening is complete."""
+    def test_resume_row_fragment_polls_when_verification_processing(self, authenticated_client, sample_resume):
+        """Row fragment keeps polling when screening is done but verification is still running."""
         sample_resume.screening_status = 'completed'
+        sample_resume.verification_status = 'processing'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_row_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' in response.content
+
+    def test_resume_row_fragment_no_poll_when_done(self, authenticated_client, sample_resume):
+        """Row fragment stops polling only when both screening and verification are terminal."""
+        sample_resume.screening_status = 'completed'
+        sample_resume.verification_status = 'completed'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_row_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' not in response.content
+
+    def test_resume_row_fragment_no_poll_when_screening_done_verification_skipped(self, authenticated_client, sample_resume):
+        """Row fragment stops polling when screening is complete and verification is skipped."""
+        sample_resume.screening_status = 'completed'
+        sample_resume.verification_status = 'skipped'
         sample_resume.save()
         response = authenticated_client.get(
             reverse('core:resume_row_fragment', kwargs={'pk': sample_resume.pk})

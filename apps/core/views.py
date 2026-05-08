@@ -237,9 +237,9 @@ def resume_create(request, job_pk):
         if form.is_valid():
             resume = form.save(commit=False)
             resume.job = job
-            resume.screening_status = 'pending'
+            resume.screening_status = 'processing'
             resume.save()
-            
+
             # Queue for async AI screening - user won't have to wait
             from apps.core.tasks import screen_resume_task
             screen_resume_task.delay(resume.id)

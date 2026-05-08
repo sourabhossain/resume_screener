@@ -1,6 +1,6 @@
 <tr id="resume-row-{{ resume.pk }}"
     class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
-    {% if resume.screening_status == 'processing' %}
+    {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' or resume.verification_status == 'processing' or resume.verification_status == 'pending' %}
     hx-get="{% url 'core:resume_row_fragment' resume.pk %}"
     hx-trigger="every 3s"
     hx-target="this"
@@ -22,7 +22,7 @@
     </td>
 
     <td class="px-5 py-4 sm:px-6 sm:py-5">
-        {% if resume.screening_status == 'processing' %}
+        {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' %}
         <div class="h-6 w-14 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700"></div>
         {% elif resume.tier %}
         <span class="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold sm:px-3 sm:py-1.5
@@ -37,7 +37,7 @@
     </td>
 
     <td class="px-5 py-4 align-middle sm:px-6 sm:py-5">
-        {% if resume.screening_status == 'processing' %}
+        {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' %}
         <div class="h-6 w-20 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700"></div>
         {% elif resume.recommendation %}
         <span class="inline-flex items-center justify-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold leading-tight sm:px-3 sm:py-1.5
@@ -52,7 +52,7 @@
     </td>
 
     <td class="px-5 py-4 sm:px-6 sm:py-5">
-        {% if resume.screening_status == 'processing' %}
+        {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' %}
         <div class="grid grid-cols-2 gap-x-3 gap-y-2">
             <div class="h-3 w-14 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
             <div class="h-3 w-14 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
@@ -60,11 +60,35 @@
             <div class="h-3 w-14 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
         </div>
         {% else %}
-        <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-            <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400"></span>Exp: {% if resume.experience_score is not None %}{{ resume.experience_score|floatformat:0 }}{% else %}—{% endif %}</span>
-            <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400"></span>Edu: {% if resume.education_score is not None %}{{ resume.education_score|floatformat:0 }}{% else %}—{% endif %}</span>
-            <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"></span>Skills: {% if resume.skills_score is not None %}{{ resume.skills_score|floatformat:0 }}{% else %}—{% endif %}</span>
-            <span class="inline-flex items-center gap-1 whitespace-nowrap"><span class="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400"></span>Certs: {% if resume.certification_score is not None %}{{ resume.certification_score|floatformat:0 }}{% else %}—{% endif %}</span>
+        <div class="grid max-w-[16rem] grid-cols-1 gap-x-4 gap-y-2 text-xs sm:max-w-none sm:grid-cols-2">
+            <span class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
+                <span class="inline-flex shrink-0 items-center gap-1 text-zinc-600 dark:text-zinc-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Experience</span>
+                </span>
+                <span class="tabular-nums font-semibold text-zinc-900 dark:text-white">{% if resume.experience_score is not None %}{{ resume.experience_score|floatformat:0 }}{% else %}—{% endif %}</span>
+            </span>
+            <span class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
+                <span class="inline-flex shrink-0 items-center gap-1 text-zinc-600 dark:text-zinc-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-primary-400"></span>
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Education</span>
+                </span>
+                <span class="tabular-nums font-semibold text-zinc-900 dark:text-white">{% if resume.education_score is not None %}{{ resume.education_score|floatformat:0 }}{% else %}—{% endif %}</span>
+            </span>
+            <span class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
+                <span class="inline-flex shrink-0 items-center gap-1 text-zinc-600 dark:text-zinc-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Skills</span>
+                </span>
+                <span class="tabular-nums font-semibold text-zinc-900 dark:text-white">{% if resume.skills_score is not None %}{{ resume.skills_score|floatformat:0 }}{% else %}—{% endif %}</span>
+            </span>
+            <span class="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-tight">
+                <span class="inline-flex shrink-0 items-center gap-1 text-zinc-600 dark:text-zinc-400">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
+                    <span class="font-medium text-zinc-700 dark:text-zinc-300">Certifications</span>
+                </span>
+                <span class="tabular-nums font-semibold text-zinc-900 dark:text-white">{% if resume.certification_score is not None %}{{ resume.certification_score|floatformat:0 }}{% else %}—{% endif %}</span>
+            </span>
         </div>
         {% endif %}
     </td>
@@ -96,7 +120,7 @@
     </td>
 
     <td class="px-5 py-4 text-center align-middle sm:px-6 sm:py-5">
-        {% if resume.screening_status == 'processing' %}
+        {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' %}
         <div class="mx-auto h-8 w-14 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700"></div>
         {% elif resume.final_score is not None %}
         <span class="inline-block whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-bold sm:px-4 sm:py-2 sm:text-base
