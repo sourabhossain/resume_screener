@@ -29,6 +29,29 @@ def _ordered_active_resumes_queryset(resume_qs):
     ).order_by('-decision_rank', '-final_score', '-created_at')
 
 
+def _pipeline_stats(resume_qs):
+    """Recommendation counts for job detail pipeline summary."""
+    stats = {
+        'total': resume_qs.count(),
+        'interview': 0,
+        'talent_pool': 0,
+        'reject': 0,
+        'undecided': 0,
+    }
+    for row in resume_qs.values('recommendation').annotate(c=Count('id')):
+        key = (row['recommendation'] or '').strip()
+        n = row['c']
+        if key == 'interview':
+            stats['interview'] = n
+        elif key == 'talent_pool':
+            stats['talent_pool'] = n
+        elif key == 'reject':
+            stats['reject'] = n
+        else:
+            stats['undecided'] += n
+    return stats
+
+
 def health_check(request):
     """Health check endpoint for monitoring and load balancers."""
     try:
@@ -101,7 +124,9 @@ def job_list(request):
         queryset=_ordered_active_resumes_queryset(Resume.objects),
     )
 
-    jobs = Job.objects.annotate(resume_count=Count('resumes')).prefetch_related(resume_prefetch)
+    jobs = Job.objects.annotate(
+        resume_count=Count('resumes', filter=Q(resumes__is_deleted=False))
+    ).prefetch_related(resume_prefetch)
 
     search_query = request.GET.get('q', '').strip()
     if search_query:
@@ -159,7 +184,15 @@ def job_detail(request, pk):
     """View job details with associated resumes."""
     job = get_object_or_404(Job, pk=pk)
     resumes = _ordered_active_resumes_queryset(job.resumes)
-    return render(request, 'core/job_detail.html', {'job': job, 'resumes': resumes})
+    return render(
+        request,
+        'core/job_detail.html',
+        {
+            'job': job,
+            'resumes': resumes,
+            'pipeline_stats': _pipeline_stats(resumes),
+        },
+    )
 
 
 @login_required
@@ -268,6 +301,20 @@ def serve_protected_media(request, path):
     if not os.path.exists(full_path):
         raise Http404
     return FileResponse(open(full_path, 'rb'))
+
+
+@login_required
+def resume_status_fragment(request, pk):
+    """Return the live-screening status partial for HTMX polling on resume_detail."""
+    resume = get_object_or_404(Resume.objects.select_related('job'), pk=pk)
+    return render(request, 'core/partials/resume_status.html', {'resume': resume})
+
+
+@login_required
+def resume_row_fragment(request, pk):
+    """Return a single table row partial for HTMX polling on job_detail."""
+    resume = get_object_or_404(Resume.objects.select_related('job'), pk=pk)
+    return render(request, 'core/partials/resume_row.html', {'resume': resume})
 
 
 @login_required

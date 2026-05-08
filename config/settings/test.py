@@ -3,6 +3,10 @@ from .base import *
 DEBUG = False
 SECRET_KEY = 'test-key-insecure-but-fine-for-tests'
 
+# Avoid LLMClient "OPENAI_API_KEY not configured" noise when .env omits the key; tests mock API calls.
+if not OPENAI_API_KEY:
+    OPENAI_API_KEY = 'sk-test-dummy-invalid-for-real-calls'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',

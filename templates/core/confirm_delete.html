@@ -3,20 +3,20 @@
 {% block title %}Delete {{ type|title }} - ResumeAI{% endblock %}
 
 {% block content %}
-<div class="max-w-lg mx-auto">
-    <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-dark-900/50 border border-gray-100 dark:border-dark-700 overflow-hidden">
+<div class="mx-auto max-w-md">
+    <div class="overflow-hidden rounded-xl border border-zinc-200/90 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-soft-dark">
         <div class="p-10 text-center">
 
-            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 dark:from-red-900/30 to-red-200 dark:to-red-800/30 flex items-center justify-center animate-pulse">
-                <svg class="w-10 h-10 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40">
+                <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
             </div>
             
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Delete {{ type|title }}?</h1>
-            <p class="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+            <h1 class="mb-3 text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">Delete {{ type|title }}?</h1>
+            <p class="mb-8 leading-relaxed text-zinc-600 dark:text-zinc-400">
                 Are you sure you want to delete 
-                <span class="font-semibold text-gray-900 dark:text-white">
+                <span class="font-medium text-zinc-900 dark:text-white">
                     {% if type == 'job' %}{{ object.title }}{% else %}{{ object.candidate_name }}{% endif %}
                 </span>?
                 <br>
@@ -26,10 +26,10 @@
             <form method="post" class="flex justify-center gap-4">
                 {% csrf_token %}
                 <a href="{% if type == 'job' %}{% url 'core:job_detail' object.pk %}{% else %}{% url 'core:job_detail' job_pk %}{% endif %}" 
-                   class="px-6 py-3 border-2 border-gray-200 dark:border-dark-600 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-700 hover:border-gray-300 dark:hover:border-dark-500 transition-all font-semibold">
+                   class="rounded-lg border border-zinc-200 px-6 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
                     Cancel
                 </a>
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all font-semibold shadow-lg shadow-red-500/30 flex items-center gap-2">
+                <button type="submit" class="rounded-lg bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>

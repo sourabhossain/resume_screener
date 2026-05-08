@@ -1,13 +1,13 @@
-<div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-100 to-red-200 flex items-center justify-center">
-    <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40">
+    <svg class="h-8 w-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
     </svg>
 </div>
 
-<h2 class="text-2xl font-bold text-gray-900 mb-3">Delete {{ type|title }}?</h2>
-<p class="text-gray-500 mb-6">
+<h2 class="mb-3 text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">Delete {{ type|title }}?</h2>
+<p class="mb-6 text-zinc-600 dark:text-zinc-400">
     Are you sure you want to delete 
-    <span class="font-semibold text-gray-900">
+    <span class="font-medium text-zinc-900 dark:text-white">
         {% if type == 'job' %}{{ object.title }}{% else %}{{ object.candidate_name }}{% endif %}
     </span>?
     <br><span class="text-sm">This action can be reversed later.</span>
@@ -15,14 +15,14 @@
 
 <form method="post" hx-post hx-swap="none">
     {% csrf_token %}
-    <div class="flex justify-center gap-4">
+    <div class="flex justify-center gap-3">
         <button type="button" @click="closeDialog()" 
-                class="px-6 py-2.5 border-2 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold">
+                class="rounded-lg border border-zinc-200 px-6 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
             Cancel
         </button>
         <button type="submit" 
-                class="px-6 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold shadow-lg flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="inline-flex items-center gap-2 rounded-lg bg-red-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
             </svg>
             Delete

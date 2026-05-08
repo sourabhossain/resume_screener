@@ -87,7 +87,10 @@ def verify_resume_links_task(self, resume_id: int):
     try:
         resume = Resume.objects.get(id=resume_id)
     except Resume.DoesNotExist:
-        logger.error(f"Resume {resume_id} not found for link verification")
+        logger.warning(
+            "Resume %s not found for link verification — skipping (deleted or invalid id)",
+            resume_id,
+        )
         Resume.all_objects.filter(id=resume_id).update(verification_status='failed')
         return {'error': 'Resume not found'}
 

@@ -97,12 +97,15 @@ def detect_job_type(job_description: str) -> str:
         response = llm_client.invoke_json(prompt, "You are a job classification expert.")
         job_type = response.get('job_type', 'tech')
         if job_type not in VALID_JOB_TYPES:
-            logger.warning(f"Unknown job_type '{job_type}' returned by detector, falling back to 'tech'")
+            logger.info(
+                "Unknown job_type %r from detector, falling back to 'tech'",
+                job_type,
+            )
             return 'tech'
         logger.info(f"Detected job_type='{job_type}' (confidence={response.get('confidence', '?')})")
         return job_type
     except Exception as e:
-        logger.warning(f"Job type detection failed: {e}. Falling back to 'tech'")
+        logger.info("Job type detection failed (%s). Falling back to 'tech'", e)
         return 'tech'
 
 
@@ -117,7 +120,7 @@ def get_prompt_path(job_type: str, prompt_name: str) -> Path:
     fallback = PROMPTS_DIR / 'tech' / f"{prompt_name}.txt"
     if not fallback.exists():
         raise FileNotFoundError(f"Prompt not found: {role_path} and fallback {fallback} missing")
-    logger.warning(f"No {prompt_name} prompt for role '{job_type}', using tech/ fallback")
+    logger.info("No %s prompt for role %r, using tech/ fallback", prompt_name, job_type)
     return fallback
 
 

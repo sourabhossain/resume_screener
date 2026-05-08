@@ -34,6 +34,12 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
+    from django.views.defaults import page_not_found, server_error
+    urlpatterns += [
+        path('404/', lambda request: page_not_found(request, None)),
+        path('500/', lambda request: server_error(request)),
+    ]
+
 
 # Custom error handlers
 def custom_404(request, exception):

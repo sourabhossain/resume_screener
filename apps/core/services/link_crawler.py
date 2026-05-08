@@ -46,7 +46,10 @@ class LinkCrawler:
         try:
             safe, reason = is_safe_public_http_url(url)
             if not safe:
-                logger.info('Blocked crawl (SSRF guard): %s — %s', url, reason)
+                if 'resume extraction artifact' in reason:
+                    logger.debug('Skipped crawl (bogus URL): %s — %s', url, reason)
+                else:
+                    logger.info('Blocked crawl (SSRF guard): %s — %s', url, reason)
                 return CrawlResult(url=url, success=False, error=f'blocked: {reason}')
 
             domain = cls._get_domain(url)
@@ -105,25 +108,38 @@ class LinkCrawler:
             logger.warning("Playwright not installed — falling back to httpx")
             return await cls._crawl_with_httpx(url)
 
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            try:
-                page = await browser.new_page(
-                    user_agent=cls.HEADERS['User-Agent']
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                try:
+                    page = await browser.new_page(
+                        user_agent=cls.HEADERS['User-Agent']
+                    )
+                    await page.goto(url, timeout=REQUEST_TIMEOUT * 1000)
+                    await page.wait_for_load_state('networkidle', timeout=10000)
+                    content = await page.content()
+                    title = await page.title()
+                    return CrawlResult(
+                        url=url,
+                        success=True,
+                        content=content[:MAX_CONTENT_LENGTH],
+                        title=title,
+                        status_code=200
+                    )
+                finally:
+                    await browser.close()
+        except Exception as e:
+            err = str(e)
+            if 'Executable doesn' in err or 'BrowserType.launch' in err:
+                logger.warning(
+                    'Playwright Chromium missing in this environment (install with '
+                    '`python -m playwright install chromium --with-deps`). '
+                    'Falling back to httpx for %s',
+                    url,
                 )
-                await page.goto(url, timeout=REQUEST_TIMEOUT * 1000)
-                await page.wait_for_load_state('networkidle', timeout=10000)
-                content = await page.content()
-                title = await page.title()
-                return CrawlResult(
-                    url=url,
-                    success=True,
-                    content=content[:MAX_CONTENT_LENGTH],
-                    title=title,
-                    status_code=200
-                )
-            finally:
-                await browser.close()
+            else:
+                logger.warning('Playwright failed for %s: %s', url, e)
+            return await cls._crawl_with_httpx(url)
 
     @staticmethod
     def _get_domain(url: str) -> str:

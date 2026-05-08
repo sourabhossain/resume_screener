@@ -31,9 +31,10 @@ def test_public_ip_literal_allowed():
     assert ok is True, reason
 
 
-def test_blocked_hostname_localhost():
-    ok, _ = is_safe_public_http_url('https://localhost/foo')
+def test_blocks_placeholder_framework_hostname():
+    ok, reason = is_safe_public_http_url('https://node.js/')
     assert ok is False
+    assert 'artifact' in reason or 'resume' in reason
 
 
 def test_hostname_allowed_when_resolve_public(monkeypatch):

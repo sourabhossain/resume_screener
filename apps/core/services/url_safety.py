@@ -19,6 +19,22 @@ _METADATA_AND_LOCAL_HOSTS = frozenset({
     '169.254.169.254',
 })
 
+# Hostnames that parsers often derive from bullets like "Node.js → https://node.js".
+_GARBAGE_EXTRACTED_HOSTS = frozenset({
+    'node.js',
+    'react.js',
+    'express.js',
+    'nest.js',
+    'vue.js',
+    'angular.js',
+    'svelte.js',
+    'ember.js',
+    'next.js',
+    'nuxt.js',
+    'jquery.js',
+    'typescript.js',
+})
+
 
 def _blocked_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     if ip == ipaddress.ip_address('169.254.169.254'):
@@ -68,6 +84,9 @@ def is_safe_public_http_url(url: str, *, resolve_dns: bool = True) -> tuple[bool
     hl = host.lower().strip('.')
     if hl in _METADATA_AND_LOCAL_HOSTS:
         return False, 'blocked hostname'
+
+    if hl in _GARBAGE_EXTRACTED_HOSTS:
+        return False, 'not a crawlable URL (resume extraction artifact)'
 
     try:
         ip = ipaddress.ip_address(host)

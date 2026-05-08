@@ -7,6 +7,49 @@ from apps.core.models import Job, Resume
 
 
 @pytest.mark.django_db
+class TestErrorPages:
+    """Tests for custom 404 and 500 error pages."""
+
+    def test_404_page_returns_404(self, client):
+        response = client.get('/404/')
+        assert response.status_code == 404
+
+    def test_404_page_contains_expected_content(self, client):
+        response = client.get('/404/')
+        assert b'404' in response.content
+        assert b'Page not found' in response.content or b'page not found' in response.content.lower()
+
+    def test_404_page_has_dashboard_link(self, client):
+        response = client.get('/404/')
+        assert b'Go to Dashboard' in response.content
+
+    def test_404_page_has_go_back_link(self, client):
+        response = client.get('/404/')
+        assert b'Go back' in response.content
+
+    def test_500_page_returns_500(self, rf):
+        from config.urls import custom_500
+        response = custom_500(rf.get('/'))
+        assert response.status_code == 500
+
+    def test_500_page_contains_expected_content(self, rf):
+        from config.urls import custom_500
+        response = custom_500(rf.get('/'))
+        assert b'500' in response.content
+        assert b'Something went wrong' in response.content
+
+    def test_500_page_has_dashboard_link(self, rf):
+        from config.urls import custom_500
+        response = custom_500(rf.get('/'))
+        assert b'Go to Dashboard' in response.content
+
+    def test_500_page_has_notification_message(self, rf):
+        from config.urls import custom_500
+        response = custom_500(rf.get('/'))
+        assert b'notified' in response.content
+
+
+@pytest.mark.django_db
 class TestHealthCheck:
     """Tests for health check endpoint."""
     
@@ -210,3 +253,143 @@ class TestResumeViews:
         )
         assert response.status_code == 302
         assert Resume.objects.filter(pk=sample_resume.pk).count() == 0
+
+    def test_resume_create_get_form(self, authenticated_client, sample_job):
+        """Test resume upload form renders for active job."""
+        response = authenticated_client.get(
+            reverse('core:resume_create', kwargs={'job_pk': sample_job.pk})
+        )
+        assert response.status_code == 200
+        assert 'form' in response.context
+
+    def test_resume_create_post(self, authenticated_client, sample_job, monkeypatch):
+        """Test submitting a valid resume queues screening and redirects."""
+        import io
+        from unittest.mock import patch
+
+        # Stub Celery task so no real task is dispatched
+        with patch('apps.core.tasks.screen_resume_task.delay') as mock_delay:
+            pdf_bytes = b'%PDF-1.4 fake content'
+            fake_file = io.BytesIO(pdf_bytes)
+            fake_file.name = 'test_resume.pdf'
+
+            response = authenticated_client.post(
+                reverse('core:resume_create', kwargs={'job_pk': sample_job.pk}),
+                {
+                    'candidate_name': 'Jane Smith',
+                    'file': fake_file,
+                },
+            )
+
+        assert response.status_code == 302
+        assert Resume.objects.filter(candidate_name='Jane Smith', job=sample_job).exists()
+        mock_delay.assert_called_once()
+
+    def test_resume_rescreen_queues_task(self, authenticated_client, sample_resume):
+        """Test re-screening a resume queues the screening task."""
+        from unittest.mock import patch
+
+        with patch('apps.core.tasks.screen_resume_task.delay') as mock_delay:
+            response = authenticated_client.post(
+                reverse('core:resume_rescreen', kwargs={'pk': sample_resume.pk})
+            )
+
+        assert response.status_code == 302
+        mock_delay.assert_called_once_with(sample_resume.id)
+
+    def test_resume_rescreen_blocked_while_processing(self, authenticated_client, sample_resume):
+        """Test re-screening is blocked when screening is already in progress."""
+        from unittest.mock import patch
+
+        sample_resume.screening_status = 'processing'
+        sample_resume.save()
+
+        with patch('apps.core.tasks.screen_resume_task.delay') as mock_delay:
+            response = authenticated_client.post(
+                reverse('core:resume_rescreen', kwargs={'pk': sample_resume.pk})
+            )
+
+        assert response.status_code == 302
+        mock_delay.assert_not_called()
+
+    def test_resume_edit_post(self, authenticated_client, sample_resume):
+        """Test editing a resume's scores and candidate name."""
+        data = {
+            'candidate_name': 'John Doe Updated',
+            'experience_score': 92,
+            'education_score': 80,
+            'skills_score': 88,
+            'certification_score': '',
+            'achievement_score': '',
+            'final_score': 87,
+        }
+        response = authenticated_client.post(
+            reverse('core:resume_edit', kwargs={'pk': sample_resume.pk}),
+            data,
+        )
+        assert response.status_code == 302
+        sample_resume.refresh_from_db()
+        assert sample_resume.candidate_name == 'John Doe Updated'
+        assert float(sample_resume.final_score) == 87
+
+    def test_resume_rescreen_get_redirects(self, authenticated_client, sample_resume):
+        """Test GET to rescreen endpoint redirects without queuing."""
+        from unittest.mock import patch
+
+        with patch('apps.core.tasks.screen_resume_task.delay') as mock_delay:
+            response = authenticated_client.get(
+                reverse('core:resume_rescreen', kwargs={'pk': sample_resume.pk})
+            )
+
+        assert response.status_code == 302
+        mock_delay.assert_not_called()
+
+    def test_resume_status_fragment_returns_200(self, authenticated_client, sample_resume):
+        """Test the HTMX status fragment endpoint renders successfully."""
+        response = authenticated_client.get(
+            reverse('core:resume_status_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert response.status_code == 200
+
+    def test_resume_row_fragment_returns_200(self, authenticated_client, sample_resume):
+        """Test the HTMX table-row fragment endpoint renders successfully."""
+        response = authenticated_client.get(
+            reverse('core:resume_row_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert response.status_code == 200
+
+    def test_resume_status_fragment_polls_when_processing(self, authenticated_client, sample_resume):
+        """Fragment includes polling trigger when screening is in progress."""
+        sample_resume.screening_status = 'processing'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_status_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' in response.content
+
+    def test_resume_status_fragment_no_poll_when_done(self, authenticated_client, sample_resume):
+        """Fragment omits polling trigger when screening is complete, stopping the poll."""
+        sample_resume.screening_status = 'completed'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_status_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' not in response.content
+
+    def test_resume_row_fragment_polls_when_processing(self, authenticated_client, sample_resume):
+        """Row fragment includes polling trigger when screening is in progress."""
+        sample_resume.screening_status = 'processing'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_row_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' in response.content
+
+    def test_resume_row_fragment_no_poll_when_done(self, authenticated_client, sample_resume):
+        """Row fragment omits polling trigger when screening is complete."""
+        sample_resume.screening_status = 'completed'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_row_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' not in response.content
