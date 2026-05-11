@@ -42,18 +42,35 @@ class SoftDeleteModel(models.Model):
 
 class Job(SoftDeleteModel):
     """Job Description model - stores job postings for resume screening."""
-    
+
     STATUS_CHOICES = [
         ('draft', 'Draft'),
         ('active', 'Active'),
         ('closed', 'Closed'),
     ]
-    
+
+    EMPLOYMENT_TYPE_CHOICES = [
+        ('full_time', 'Full-time'),
+        ('part_time', 'Part-time'),
+        ('contract', 'Contract'),
+        ('freelance', 'Freelance'),
+        ('internship', 'Internship'),
+    ]
+
+    LOCATION_TYPE_CHOICES = [
+        ('on_site', 'On-site'),
+        ('remote', 'Remote'),
+        ('hybrid', 'Hybrid'),
+    ]
+
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     file_name = models.CharField(max_length=255, blank=True)
     file = models.FileField(upload_to='jobs/', blank=True, null=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft')
+    employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES, blank=True)
+    location_type = models.CharField(max_length=10, choices=LOCATION_TYPE_CHOICES, blank=True)
+    location = models.CharField(max_length=255, blank=True)
     posted_date = models.DateField(null=True, blank=True)
     closing_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

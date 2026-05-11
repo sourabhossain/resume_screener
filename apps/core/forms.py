@@ -64,10 +64,14 @@ class FileSaveMixin:
 
 class JobForm(forms.ModelForm):
     """Form for creating and editing job descriptions."""
-    
+
     class Meta:
         model = Job
-        fields = ['title', 'description', 'status', 'posted_date', 'closing_date']
+        fields = [
+            'title', 'description', 'status',
+            'employment_type', 'location_type', 'location',
+            'posted_date', 'closing_date',
+        ]
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-input',
@@ -78,34 +82,36 @@ class JobForm(forms.ModelForm):
                 'placeholder': 'Enter job requirements, responsibilities, and qualifications...',
                 'rows': 8
             }),
-            'status': forms.Select(attrs={
-                'class': 'form-input'
-            }),
-            'posted_date': forms.DateInput(attrs={
+            'status': forms.Select(attrs={'class': 'form-input'}),
+            'employment_type': forms.Select(attrs={'class': 'form-input'}),
+            'location_type': forms.Select(attrs={'class': 'form-input'}),
+            'location': forms.TextInput(attrs={
                 'class': 'form-input',
-                'type': 'date'
+                'placeholder': 'e.g. Dhaka, Bangladesh'
             }),
-            'closing_date': forms.DateInput(attrs={
-                'class': 'form-input',
-                'type': 'date'
-            }),
+            'posted_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
+            'closing_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
         }
         labels = {
             'title': 'Job Title',
             'description': 'Job Description',
             'status': 'Status',
+            'employment_type': 'Employment Type',
+            'location_type': 'Location Type',
+            'location': 'Location',
             'posted_date': 'Posted Date',
             'closing_date': 'Application Deadline',
-        }
-        help_texts = {
-            'posted_date': 'Optional.',
-            'closing_date': 'Optional.',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['posted_date'].required = False
         self.fields['closing_date'].required = False
+        self.fields['employment_type'].required = False
+        self.fields['location_type'].required = False
+        self.fields['location'].required = False
+        self.fields['employment_type'].empty_label = 'Select type…'
+        self.fields['location_type'].empty_label = 'Select type…'
 
     def clean(self):
         data = super().clean()

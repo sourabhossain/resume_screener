@@ -20,6 +20,7 @@ urlpatterns = [
     
     # Resume URLs
     path('jobs/<int:job_pk>/resumes/add/', views.resume_create, name='resume_create'),
+    path('jobs/<int:job_pk>/resumes/bulk/', views.resume_bulk_create, name='resume_bulk_create'),
     path('resumes/<int:pk>/', views.resume_detail, name='resume_detail'),
     path('resumes/<int:pk>/edit/', views.resume_edit, name='resume_edit'),
     path('resumes/<int:pk>/delete/', views.resume_delete, name='resume_delete'),

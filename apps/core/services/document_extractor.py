@@ -10,7 +10,7 @@ import docx
 class DocumentExtractor:
     """Extract text content from resume documents."""
     
-    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt'}
+    SUPPORTED_EXTENSIONS = {'.pdf', '.docx'}
     
     @classmethod
     def extract(cls, file_path: str) -> str:
@@ -38,8 +38,6 @@ class DocumentExtractor:
             return cls._extract_from_pdf(file_path)
         elif extension == '.docx':
             return cls._extract_from_docx(file_path)
-        elif extension == '.txt':
-            return cls._extract_from_txt(file_path)
         else:
             raise ValueError(f"Unsupported file type: {extension}")
     
@@ -76,12 +74,6 @@ class DocumentExtractor:
                     text_parts.append(row_text)
         
         return "\n".join(text_parts)
-    
-    @staticmethod
-    def _extract_from_txt(file_path: str) -> str:
-        """Extract text from plain text file."""
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
-            return file.read()
     
     @classmethod
     def is_supported(cls, file_path: str) -> bool:

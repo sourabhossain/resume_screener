@@ -1,10 +1,9 @@
-"""
-Link Verifier — compares crawled page content against CV claims using LLM.
-"""
 import asyncio
+import concurrent.futures
 import logging
-from datetime import datetime
 from typing import Any
+
+from django.utils import timezone
 
 from apps.core.services.link_crawler import LinkCrawler, CrawlResult
 from apps.core.services.link_extractor import LinkExtractor, LinkType
@@ -12,9 +11,15 @@ from apps.core.services.link_extractor import LinkExtractor, LinkType
 logger = logging.getLogger(__name__)
 
 
+def _run_async(coro):
+    """Run async coroutine safely in any thread context."""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(asyncio.run, coro)
+        return future.result()
+
+
 class LinkVerifier:
 
-    # Verification prompt for LLM
     VERIFY_PROMPT = """You are verifying a job candidate's online presence against their CV claims.
 
 <cv_context>
@@ -47,12 +52,7 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
 
     @classmethod
     def verify_resume(cls, resume) -> dict[str, Any]:
-        """
-        Main entry point — extract links, crawl, verify.
-        Returns verification results dict.
-        """
         try:
-            # Extract links from CV text
             if not resume.raw_text:
                 return cls._skip_result("No CV text available")
 
@@ -60,21 +60,17 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
             if not links:
                 return cls._skip_result("No verifiable links found in CV")
 
-            # Store extracted links
             resume.extracted_links = [
                 {'url': l.url, 'type': l.link_type, 'context': l.raw_text}
                 for l in links
             ]
             resume.save(update_fields=['extracted_links'])
 
-            # Crawl all links
             urls = [l.url for l in links]
-            crawl_results = asyncio.run(LinkCrawler.crawl_many(urls))
+            crawl_results = _run_async(LinkCrawler.crawl_many(urls))
 
-            # Build a map: url → crawl result
             crawl_map = {r.url: r for r in crawl_results}
 
-            # Verify each link with LLM
             from apps.core.services.llm_client import LLMClient
             llm = LLMClient()
 
@@ -96,9 +92,7 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
                     })
                     continue
 
-                # Truncate content for LLM
                 page_content = cls._clean_html(crawl_result.content)[:3000]
-
                 prompt = cls.VERIFY_PROMPT.format(
                     cv_excerpt=resume.raw_text[:1000],
                     url=link.url,
@@ -133,18 +127,15 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
                         'confidence': 0.0
                     })
 
-            # Calculate overall verification score
-            verification_score = cls._calculate_score(verification_details)
-
             return {
                 'status': 'completed',
                 'links_found': len(links),
                 'links_verified': sum(1 for d in verification_details if d['status'] == 'verified'),
-                'verification_score': verification_score,
+                'verification_score': cls._calculate_score(verification_details),
                 'verified_claims': all_verified_claims,
                 'discrepancies': all_discrepancies,
                 'details': verification_details,
-                'verified_at': datetime.now().isoformat()
+                'verified_at': timezone.now().isoformat()
             }
 
         except Exception as e:
@@ -162,12 +153,6 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
 
     @classmethod
     def _calculate_score(cls, details: list) -> float:
-        """
-        Score based on:
-        - Links successfully verified (belong to candidate)
-        - Claims verified vs discrepancies found
-        - Confidence levels
-        """
         if not details:
             return 0.0
 
@@ -182,24 +167,17 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
         if total_claims + total_discrepancies == 0:
             base_score = 50.0
         else:
-            claim_ratio = total_claims / (total_claims + total_discrepancies)
-            base_score = claim_ratio * 100
+            base_score = total_claims / (total_claims + total_discrepancies) * 100
 
-        # Weight by confidence
         final_score = base_score * avg_confidence + base_score * (1 - avg_confidence) * 0.5
         return round(min(final_score, 100.0), 1)
 
     @staticmethod
     def _clean_html(html: str) -> str:
-        """Strip HTML tags, keep readable text."""
         import re
-        # Remove script and style blocks
         html = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', html, flags=re.DOTALL | re.IGNORECASE)
-        # Remove all tags
         html = re.sub(r'<[^>]+>', ' ', html)
-        # Normalize whitespace
-        html = re.sub(r'\s+', ' ', html).strip()
-        return html
+        return re.sub(r'\s+', ' ', html).strip()
 
     @staticmethod
     def _skip_result(reason: str) -> dict:

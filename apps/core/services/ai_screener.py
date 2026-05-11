@@ -1,8 +1,3 @@
-"""
-AI Resume Screening Engine using LangGraph.
-Implements the full screening workflow: Extract → Match → Score → Rank
-Supports role-based prompt routing for 8 job types.
-"""
 import datetime
 import logging
 from enum import Enum
@@ -23,7 +18,6 @@ PROMPTS_DIR = Path(__file__).parent.parent / 'prompts'
 
 @lru_cache(maxsize=32)
 def _load_prompt_cached(path: Path) -> str:
-    """Load and cache a prompt file by its absolute path."""
     return Path(path).read_text(encoding='utf-8')
 
 VALID_JOB_TYPES = {
@@ -39,15 +33,15 @@ VALID_JOB_TYPES = {
 
 
 class Tier(str, Enum):
-    TOP = "Top"
-    MID = "Mid"
-    LOW = "Low"
+    TOP = "top"
+    MID = "mid"
+    LOW = "low"
 
 
 class Recommendation(str, Enum):
-    INTERVIEW = "Interview"
-    TALENT_POOL = "Talent Pool"
-    REJECT = "Reject"
+    INTERVIEW = "interview"
+    TALENT_POOL = "talent_pool"
+    REJECT = "reject"
 
 
 class ResumeScreeningState(TypedDict):
@@ -84,10 +78,6 @@ class ResumeScreeningState(TypedDict):
 
 
 def detect_job_type(job_description: str) -> str:
-    """
-    Detect job type from description using LLM.
-    Falls back to 'tech' on any error.
-    """
     try:
         config = settings.AI_SCREENING_CONFIG
         job_desc = job_description[:config['MAX_JOB_DESC_CHARS']]
@@ -110,10 +100,6 @@ def detect_job_type(job_description: str) -> str:
 
 
 def get_prompt_path(job_type: str, prompt_name: str) -> Path:
-    """
-    Return the path to the role-specific prompt file.
-    Falls back to tech/ if the role-specific file does not exist.
-    """
     role_path = PROMPTS_DIR / job_type / f"{prompt_name}.txt"
     if role_path.exists():
         return role_path
@@ -125,7 +111,6 @@ def get_prompt_path(job_type: str, prompt_name: str) -> Path:
 
 
 def extract_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Extract candidate profile from resume text using role-specific prompt."""
     try:
         config = settings.AI_SCREENING_CONFIG
         resume_text = state['resume_text'][:config['MAX_RESUME_CHARS']]
@@ -158,7 +143,6 @@ def extract_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
 
 def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Match candidate profile against job requirements using role-specific prompt."""
     if state.get('error'):
         return state
 
@@ -211,7 +195,6 @@ def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
 
 def score_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Calculate weighted scores. Tech uses 4-factor weights; all other roles add achievement_score."""
     if state.get('error'):
         return state
 
@@ -242,8 +225,7 @@ def score_node(state: ResumeScreeningState) -> ResumeScreeningState:
                 state['certification_score'] * config['CERTIFICATION_WEIGHT']
             )
         else:
-            # Non-tech roles: achievements carry 20% weight; other weights adjusted down.
-            # Use 'or 0.0' to safely handle None (e.g. if match_node errored but was recovered).
+            # 'or 0.0' guards against None if match_node failed and was recovered
             achievement_score = state.get('achievement_score') or 0.0
             state['final_score'] = (
                 state['skill_score'] * config['NON_TECH_SKILL_WEIGHT'] +
@@ -266,7 +248,6 @@ def score_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
 
 def rank_node(state: ResumeScreeningState) -> ResumeScreeningState:
-    """Assign tier and recommendation based on score."""
     if state.get('error'):
         return state
 
@@ -309,7 +290,6 @@ def rank_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
 @lru_cache(maxsize=1)
 def get_cached_workflow():
-    """Create and cache the LangGraph screening workflow."""
     workflow = StateGraph(ResumeScreeningState)
 
     workflow.add_node("extract", extract_node)
@@ -332,18 +312,6 @@ def screen_resume(
     resume_id: int = 0,
     job_type: str = "",
 ) -> Dict[str, Any]:
-    """
-    Screen a resume against a job description.
-
-    Args:
-        resume_text: Extracted text from resume
-        job_description: Job description text
-        resume_id: ID of the Resume model instance (for logging correlation)
-        job_type: Role type for prompt routing. Auto-detected via LLM if empty string.
-
-    Returns:
-        Dictionary with screening results
-    """
     if not resume_text or not job_description:
         return {
             'error': 'Resume text and job description are required',
@@ -352,7 +320,6 @@ def screen_resume(
             'recommendation': Recommendation.REJECT.value
         }
 
-    # Auto-detect job type if not provided or whitespace-only
     resolved_job_type = job_type.strip() or detect_job_type(job_description)
 
     initial_state: ResumeScreeningState = {

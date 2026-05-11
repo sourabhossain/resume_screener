@@ -12,19 +12,15 @@ import os
 class TestDocumentExtractor:
     """Tests for DocumentExtractor service."""
     
-    def test_extract_from_txt(self, tmp_path):
-        """Test extracting text from TXT file."""
+    def test_extract_from_txt_is_unsupported(self, tmp_path):
         from apps.core.services.document_extractor import DocumentExtractor
-        
-        # Create a temp text file
+
         txt_file = tmp_path / "test.txt"
         txt_file.write_text("This is test resume content.\nSkills: Python, Django")
-        
-        result = DocumentExtractor.extract(str(txt_file))
-        
-        assert "This is test resume content" in result
-        assert "Python" in result
-    
+
+        with pytest.raises(ValueError, match="Unsupported file type"):
+            DocumentExtractor.extract(str(txt_file))
+
     def test_unsupported_file_type(self, tmp_path):
         """Test that unsupported file types raise ValueError."""
         from apps.core.services.document_extractor import DocumentExtractor
@@ -50,7 +46,7 @@ class TestDocumentExtractor:
         assert DocumentExtractor.is_supported("resume.pdf") is True
         assert DocumentExtractor.is_supported("resume.docx") is True
         assert DocumentExtractor.is_supported("resume.doc") is False
-        assert DocumentExtractor.is_supported("resume.txt") is True
+        assert DocumentExtractor.is_supported("resume.txt") is False
         assert DocumentExtractor.is_supported("resume.xyz") is False
 
 

@@ -104,6 +104,19 @@
                     Closes {{ job.closing_date|date:"M d, Y" }}
                 </p>
                 {% endif %}
+                {% if job.employment_type or job.location_type or job.location %}
+                <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    {% if job.employment_type %}
+                    <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">{{ job.get_employment_type_display }}</span>
+                    {% endif %}
+                    {% if job.location_type %}
+                    <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">{{ job.get_location_type_display }}</span>
+                    {% endif %}
+                    {% if job.location %}
+                    <span class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">{{ job.location }}</span>
+                    {% endif %}
+                </p>
+                {% endif %}
             </div>
             
 

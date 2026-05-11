@@ -58,7 +58,7 @@ class JobViewSet(viewsets.ModelViewSet):
     
     def perform_destroy(self, instance):
         instance.soft_delete()
-    
+
     @extend_schema(tags=['Jobs'], summary='Restore job', operation_id='job_restore')
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
@@ -88,7 +88,12 @@ class ResumeViewSet(viewsets.ModelViewSet):
     queryset = Resume.objects.all()
     serializer_class = ResumeSerializer
     permission_classes = [IsAuthenticated]
-    
+
+    def perform_create(self, serializer):
+        from apps.core.tasks import screen_resume_task
+        resume = serializer.save(screening_status='processing')
+        screen_resume_task.delay(resume.id)
+
     def get_queryset(self):
         queryset = Resume.objects.select_related('job')
         job_id = self.request.query_params.get('job', None)

@@ -63,11 +63,9 @@ class LinkCrawler:
 
     @classmethod
     async def crawl_many(cls, urls: list[str]) -> list[CrawlResult]:
-        """Crawl multiple URLs concurrently with rate limiting."""
         results = []
-        # Crawl in batches of 3 to avoid hammering servers
-        for i in range(0, len(urls), 3):
-            batch = urls[i:i+3]
+        batches = [urls[i:i+3] for i in range(0, len(urls), 3)]
+        for idx, batch in enumerate(batches):
             batch_results = await asyncio.gather(
                 *[cls.crawl(url) for url in batch],
                 return_exceptions=True
@@ -77,8 +75,9 @@ class LinkCrawler:
                     results.append(CrawlResult(url=url, success=False, error=str(result)))
                 else:
                     results.append(result)
-            # Polite delay between batches
-            await asyncio.sleep(2)
+            # Polite delay between batches to avoid hammering servers
+            if idx < len(batches) - 1:
+                await asyncio.sleep(2)
         return results
 
     @classmethod

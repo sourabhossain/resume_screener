@@ -1,6 +1,3 @@
-"""
-Celery tasks for async resume screening.
-"""
 import logging
 from celery import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
@@ -11,12 +8,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, max_retries=3, soft_time_limit=120, time_limit=150, acks_late=True)
 def screen_resume_task(self, resume_id: int):
-    """
-    Async task to screen a resume using AI.
-
-    Args:
-        resume_id: ID of the Resume model instance
-    """
     from apps.core.models import Resume
     from apps.core.services.resume_service import ResumeService
 
@@ -28,10 +19,9 @@ def screen_resume_task(self, resume_id: int):
 
         if result.get('success'):
             logger.info(f"Completed screening for resume {resume_id}: Score={result.get('final_score')}, Tier={result.get('tier')}")
-            return result
         else:
             logger.error(f"Screening failed for resume {resume_id}: {result.get('error')}")
-            return result
+        return result
 
     except SoftTimeLimitExceeded:
         logger.error(f"Resume {resume_id} screening timed out after 120s")
@@ -43,7 +33,7 @@ def screen_resume_task(self, resume_id: int):
 
     except Resume.DoesNotExist:
         logger.error(f"Resume {resume_id} not found — may have been deleted")
-        # Use all_objects to reach the soft-deleted row and prevent it staying 'processing'
+        # all_objects reaches soft-deleted rows to prevent them staying 'processing'
         Resume.all_objects.filter(id=resume_id).update(screening_status='failed')
         return {'error': 'Resume not found'}
 
@@ -52,13 +42,12 @@ def screen_resume_task(self, resume_id: int):
 
         retries_left = self.max_retries - self.request.retries
         if retries_left > 0:
-            # Will be retried — keep as pending so UI shows it queued, not failed
+            # Keep as pending so UI shows it queued, not failed, while retrying
             try:
                 Resume.objects.filter(id=resume_id).update(screening_status='pending')
             except Exception as update_err:
                 logger.warning(f"Could not reset status to pending for resume {resume_id}: {update_err}")
         else:
-            # All retries exhausted — mark as permanently failed
             try:
                 Resume.objects.filter(id=resume_id).update(screening_status='failed')
             except Exception as update_err:
@@ -68,21 +57,10 @@ def screen_resume_task(self, resume_id: int):
         raise self.retry(exc=e, countdown=60)
 
 
-@shared_task(
-    bind=True,
-    max_retries=2,
-    soft_time_limit=180,
-    time_limit=210,
-    acks_late=True,
-)
+@shared_task(bind=True, max_retries=2, soft_time_limit=180, time_limit=210, acks_late=True)
 def verify_resume_links_task(self, resume_id: int):
-    """
-    Crawl and verify all links found in a resume.
-    Runs after screening is complete.
-    """
     from apps.core.models import Resume
     from apps.core.services.link_verifier import LinkVerifier
-    from celery.exceptions import SoftTimeLimitExceeded
 
     try:
         resume = Resume.objects.get(id=resume_id)
@@ -112,11 +90,7 @@ def verify_resume_links_task(self, resume_id: int):
         resume.verification_score = result.get('verification_score')
 
         from django.utils import timezone
-
-        if resume.verification_status == 'completed':
-            resume.verified_at = timezone.now()
-        else:
-            resume.verified_at = None
+        resume.verified_at = timezone.now() if resume.verification_status == 'completed' else None
 
         resume.save(update_fields=[
             'verification_results', 'verification_score',
@@ -127,16 +101,12 @@ def verify_resume_links_task(self, resume_id: int):
 
     except SoftTimeLimitExceeded:
         logger.error(f"Link verification timed out for resume {resume_id}")
-        Resume.objects.filter(id=resume_id).update(
-            verification_status='failed', verified_at=None
-        )
+        Resume.objects.filter(id=resume_id).update(verification_status='failed', verified_at=None)
         return {'error': 'timeout'}
     except Exception as e:
         logger.exception(f"Link verification failed for resume {resume_id}: {e}")
         try:
-            Resume.objects.filter(id=resume_id).update(
-                verification_status='failed', verified_at=None
-            )
+            Resume.objects.filter(id=resume_id).update(verification_status='failed', verified_at=None)
         except Exception as update_err:
             logger.warning(f"Could not update verification status: {update_err}")
         raise self.retry(exc=e, countdown=30)
@@ -144,16 +114,9 @@ def verify_resume_links_task(self, resume_id: int):
 
 @shared_task
 def batch_screen_resumes(job_id: int):
-    """
-    Screen all pending resumes for a job.
-
-    Args:
-        job_id: ID of the Job model instance
-    """
     from apps.core.models import Resume
 
-    # select_for_update(skip_locked=True) + atomic prevents concurrent calls from
-    # dispatching the same resumes twice (race condition fix)
+    # skip_locked=True prevents concurrent calls from dispatching the same resumes twice
     with transaction.atomic():
         resume_ids = list(
             Resume.objects.select_for_update(skip_locked=True).filter(

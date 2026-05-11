@@ -36,11 +36,23 @@
                         {{ job.get_status_display }}
                     </span>
                 </div>
-                <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
                     {% if job.posted_date %}<span class="tabular-nums">Posted {{ job.posted_date|date:"M j, Y" }}</span>{% endif %}
-                    {% if job.posted_date and job.closing_date %}<span class="mx-2 text-zinc-300 dark:text-zinc-600">·</span>{% endif %}
+                    {% if job.posted_date and job.closing_date %}<span class="text-zinc-300 dark:text-zinc-600">·</span>{% endif %}
                     {% if job.closing_date %}<span class="tabular-nums">Closes {{ job.closing_date|date:"M j, Y" }}</span>{% endif %}
-                </p>
+                    {% if job.employment_type %}
+                    {% if job.posted_date or job.closing_date %}<span class="text-zinc-300 dark:text-zinc-600">·</span>{% endif %}
+                    <span>{{ job.get_employment_type_display }}</span>
+                    {% endif %}
+                    {% if job.location_type %}
+                    <span class="text-zinc-300 dark:text-zinc-600">·</span>
+                    <span>{{ job.get_location_type_display }}</span>
+                    {% endif %}
+                    {% if job.location %}
+                    <span class="text-zinc-300 dark:text-zinc-600">·</span>
+                    <span>{{ job.location }}</span>
+                    {% endif %}
+                </div>
             </div>
         </div>
         <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
@@ -133,10 +145,19 @@
                 <p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">{{ resumes.count }} in queue · sorted by decision, then score</p>
             </div>
             {% if job.status == 'active' %}
-            <a href="{% url 'core:resume_create' job.pk %}" class="btn-primary inline-flex items-center justify-center gap-2 self-stretch rounded-xl px-5 py-2.5 text-sm font-semibold text-white sm:self-auto">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Add resume
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'core:resume_bulk_create' job.pk %}"
+                   class="inline-flex items-center justify-center gap-2 self-stretch rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800 sm:self-auto">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                    </svg>
+                    Bulk upload
+                </a>
+                <a href="{% url 'core:resume_create' job.pk %}" class="btn-primary inline-flex items-center justify-center gap-2 self-stretch rounded-xl px-5 py-2.5 text-sm font-semibold text-white sm:self-auto">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Add resume
+                </a>
+            </div>
             {% else %}
             <div class="flex flex-wrap items-center gap-2">
                 <span class="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm font-medium text-zinc-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
