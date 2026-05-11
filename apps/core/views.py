@@ -245,8 +245,8 @@ def resume_create(request, job_pk):
             screen_resume_task.delay(resume.id)
             
             messages.success(
-                request, 
-                'Resume added successfully! AI screening is in progress - refresh to see results.'
+                request,
+                'Resume added. AI screening is running in the background—the pipeline row will refresh automatically.',
             )
             
             return redirect('core:job_detail', pk=job_pk)
