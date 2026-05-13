@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Create Organization — ResumeAI{% endblock %}
+{% block nav_action %}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-lg">
+    <div class="mb-8 text-center">
+        <h1 class="text-3xl font-bold text-zinc-900 dark:text-white">
+            Create your organization
+        </h1>
+        <p class="mt-2 text-zinc-500">
+            Set up your team's workspace in under 2 minutes.
+        </p>
+    </div>
+
+    <div
+        class="rounded-2xl border border-zinc-200/80 bg-white p-8 shadow-soft dark:border-zinc-800 dark:bg-zinc-900"
+    >
+        <form
+            method="post"
+            novalidate
+            x-data="{
+                submitting: false,
+                password: '',
+                get strength() {
+                  let s = 0;
+                  if (this.password.length >= 8) s++;
+                  if (/[A-Z]/.test(this.password)) s++;
+                  if (/[0-9]/.test(this.password)) s++;
+                  if (/[^A-Za-z0-9]/.test(this.password)) s++;
+                  return s;
+                }
+              }"
+            @submit="submitting = true"
+        >
+            {% csrf_token %} {% if errors %}
+            <div
+                class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+            >
+                {% for field, msg in errors.items %}
+                <p>{{ msg }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="space-y-5">
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        for="name"
+                        >Company name</label
+                    >
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value="{{ name|default:'' }}"
+                        required
+                        class="form-input"
+                        placeholder="Acme Corp"
+                    />
+                    {% if errors.name %}
+                    <p class="mt-1 text-xs text-red-600">{{ errors.name }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        for="slug"
+                    >
+                        Subdomain slug
+                        <span class="ml-1 text-xs text-zinc-400"
+                            >(.resumeai.com)</span
+                        >
+                    </label>
+                    <input
+                        type="text"
+                        id="slug"
+                        name="slug"
+                        value="{{ slug|default:'' }}"
+                        pattern="[a-z0-9\-]+"
+                        class="form-input"
+                        placeholder="acme-corp"
+                    />
+                    <p class="mt-1 text-xs text-zinc-400">
+                        Lowercase letters, numbers, hyphens only.
+                    </p>
+                    {% if errors.slug %}
+                    <p class="mt-1 text-xs text-red-600">{{ errors.slug }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        for="email"
+                        >Admin email</label
+                    >
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value="{{ email|default:'' }}"
+                        required
+                        class="form-input"
+                        placeholder="you@company.com"
+                    />
+                    {% if errors.email %}
+                    <p class="mt-1 text-xs text-red-600">{{ errors.email }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        for="password"
+                        >Password</label
+                    >
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        minlength="8"
+                        class="form-input"
+                        placeholder="Min. 8 characters"
+                        x-model="password"
+                    />
+                    {% if errors.password %}
+                    <p class="mt-1 text-xs text-red-600">
+                        {{ errors.password }}
+                    </p>
+                    {% endif %}
+                    <!-- Password strength indicator -->
+                    <div class="mt-2 space-y-1" x-show="password.length > 0">
+                        <div class="flex gap-1">
+                            <div
+                                class="h-1 flex-1 rounded-full transition-colors duration-200"
+                                :class="strength >= 1 ? 'bg-red-400' : 'bg-zinc-200 dark:bg-zinc-700'"
+                            ></div>
+                            <div
+                                class="h-1 flex-1 rounded-full transition-colors duration-200"
+                                :class="strength >= 2 ? 'bg-amber-400' : 'bg-zinc-200 dark:bg-zinc-700'"
+                            ></div>
+                            <div
+                                class="h-1 flex-1 rounded-full transition-colors duration-200"
+                                :class="strength >= 3 ? 'bg-emerald-400' : 'bg-zinc-200 dark:bg-zinc-700'"
+                            ></div>
+                            <div
+                                class="h-1 flex-1 rounded-full transition-colors duration-200"
+                                :class="strength >= 4 ? 'bg-emerald-600' : 'bg-zinc-200 dark:bg-zinc-700'"
+                            ></div>
+                        </div>
+                        <p
+                            class="text-xs transition-colors duration-200"
+                            :class="{ 'text-red-500': strength === 1, 'text-amber-500': strength === 2, 'text-emerald-500': strength >= 3 }"
+                            x-text="['', 'Weak', 'Fair', 'Good', 'Strong'][strength]"
+                        ></p>
+                    </div>
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                        for="password2"
+                        >Confirm password</label
+                    >
+                    <input
+                        type="password"
+                        id="password2"
+                        name="password2"
+                        required
+                        class="form-input"
+                        placeholder="Repeat password"
+                    />
+                </div>
+            </div>
+
+            <button
+                type="submit"
+                :disabled="submitting"
+                :class="{ 'opacity-50 cursor-not-allowed': submitting }"
+                class="btn-primary mt-6 w-full rounded-xl py-3 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-opacity disabled:opacity-50"
+            >
+                <svg x-show="submitting" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span x-text="submitting ? 'Creating...' : 'Create organization'"></span>
+            </button>
+        </form>
+
+        <p class="mt-4 text-center text-sm text-zinc-500">
+            Already have an account?
+            <a
+                href="{% url 'login' %}"
+                class="font-medium text-primary-600 hover:underline"
+                >Log in</a
+            >
+        </p>
+    </div>
+</div>
+
+<script>
+    document.getElementById("name").addEventListener("input", function () {
+        const slug = this.value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+        const slugField = document.getElementById("slug");
+        if (!slugField._touched) slugField.value = slug;
+    });
+    document.getElementById("slug").addEventListener("input", function () {
+        this._touched = true;
+    });
+</script>
+{% endblock %}

@@ -24,7 +24,10 @@ urlpatterns = [
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 
     # Authentication URLs
-    path('login/', auth_views.LoginView.as_view(template_name='auth/login.html'), name='login'),
+    path('login/', auth_views.LoginView.as_view(
+        template_name='auth/login.html',
+        redirect_authenticated_user=True,
+    ), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
     # Protected media — requires login; prevents unauthenticated access to PII files

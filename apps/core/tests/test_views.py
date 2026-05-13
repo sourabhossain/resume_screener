@@ -124,25 +124,26 @@ class TestJobViews:
         assert response.status_code == 200
         assert sample_job in response.context['jobs']
     
-    def test_job_list_default_active(self, authenticated_client, sample_job):
+    def test_job_list_default_active(self, authenticated_client, sample_job, org):
         """Test job list defaults to active status."""
-        # Create a draft job
-        Job.objects.create(title='Draft Job', status='draft')
-        
+        # Create a draft job in the same org
+        Job.objects.create(title='Draft Job', status='draft', organization=org)
+
         response = authenticated_client.get(reverse('core:job_list'))
-        
+
         # Should only contain active jobs (sample_job is active)
         assert len(response.context['jobs']) == 1
         assert response.context['jobs'][0] == sample_job
         assert response.context['status_filter'] == 'active'
 
-    def test_job_list_all_filter(self, authenticated_client, sample_job):
-        """Test explicit 'all' filter returns all jobs."""
-        Job.objects.create(title='Draft Job', status='draft')
-        
+    def test_job_list_all_filter(self, authenticated_client, sample_job, org):
+        """Test explicit 'all' filter returns all jobs within the org."""
+        from apps.core.models import Organization
+        Job.objects.create(title='Draft Job', status='draft', organization=org)
+
         response = authenticated_client.get(reverse('core:job_list'), {'status': 'all'})
-        
-        # Should contain both jobs
+
+        # Should contain both jobs (both belong to the same test org)
         assert len(response.context['jobs']) == 2
         assert response.context['status_filter'] == 'all'
         
@@ -267,8 +268,9 @@ class TestResumeViews:
         import io
         from unittest.mock import patch
 
-        # Stub Celery task so no real task is dispatched
-        with patch('apps.core.tasks.screen_resume_task.delay') as mock_delay:
+        # Stub Celery task and on_commit so task fires synchronously in tests
+        with patch('apps.core.tasks.screen_resume_task.delay') as mock_delay, \
+             patch('apps.core.views.transaction.on_commit', side_effect=lambda fn: fn()):
             pdf_bytes = b'%PDF-1.4 fake content'
             fake_file = io.BytesIO(pdf_bytes)
             fake_file.name = 'test_resume.pdf'

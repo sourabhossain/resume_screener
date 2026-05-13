@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}No Organization — ResumeAI{% endblock %}
+{% block nav_action %}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-md py-16 text-center">
+    <!-- Icon -->
+    <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-zinc-100 shadow-soft dark:bg-zinc-800">
+        <svg class="h-10 w-10 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+        </svg>
+    </div>
+
+    <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">No organization yet</h1>
+    <p class="mt-3 text-zinc-500 dark:text-zinc-400">
+        You're not a member of any organization. Create a new one or ask your team admin to invite you.
+    </p>
+
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+        <a href="{% url 'core:org_register' %}" class="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Create an organization
+        </a>
+        <a href="{% url 'logout' %}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 px-6 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Log out
+        </a>
+    </div>
+
+    <p class="mt-8 text-xs text-zinc-400 dark:text-zinc-600">
+        Expecting an invite? Ask your admin to send it to <strong>{{ user.email }}</strong>.
+    </p>
+</div>
+{% endblock %}

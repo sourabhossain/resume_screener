@@ -39,7 +39,10 @@ class JobViewSet(viewsets.ModelViewSet):
         return JobDetailSerializer
     
     def get_queryset(self):
-        queryset = Job.objects.annotate(
+        org = self.request.organization
+        if not org:
+            return Job.objects.none()
+        queryset = Job.objects.filter(organization=org).annotate(
             resume_count=Count('resumes', filter=Q(resumes__is_deleted=False))
         ).prefetch_related(
             Prefetch(
@@ -62,8 +65,12 @@ class JobViewSet(viewsets.ModelViewSet):
     @extend_schema(tags=['Jobs'], summary='Restore job', operation_id='job_restore')
     @action(detail=True, methods=['post'])
     def restore(self, request, pk=None):
+        org = request.organization
+        qs = Job.all_objects.all()
+        if org:
+            qs = qs.filter(organization=org)
         try:
-            job = Job.objects.all_with_deleted().get(pk=pk)
+            job = qs.get(pk=pk)
         except Job.DoesNotExist:
             raise NotFound(f"Job {pk} not found.")
         job.restore()
@@ -91,11 +98,17 @@ class ResumeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         from apps.core.tasks import screen_resume_task
-        resume = serializer.save(screening_status='processing')
+        resume = serializer.save(
+            screening_status='processing',
+            organization=self.request.organization,
+        )
         screen_resume_task.delay(resume.id)
 
     def get_queryset(self):
-        queryset = Resume.objects.select_related('job')
+        org = self.request.organization
+        if not org:
+            return Resume.objects.none()
+        queryset = Resume.objects.filter(organization=org).select_related('job')
         job_id = self.request.query_params.get('job', None)
         if job_id:
             queryset = queryset.filter(job_id=job_id)

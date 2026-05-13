@@ -12,15 +12,16 @@ def screen_resume_task(self, resume_id: int):
     from apps.core.services.resume_service import ResumeService
 
     try:
-        resume = Resume.objects.select_related('job').get(id=resume_id)
-        logger.info(f"Starting screening for resume {resume_id}")
+        resume = Resume.objects.select_related('job', 'organization').get(id=resume_id)
+        org_slug = resume.organization.slug if resume.organization else 'unknown'
+        logger.info(f"[Org: {org_slug}] Starting screening for resume {resume_id}")
 
         result = ResumeService.process_resume(resume)
 
         if result.get('success'):
-            logger.info(f"Completed screening for resume {resume_id}: Score={result.get('final_score')}, Tier={result.get('tier')}")
+            logger.info(f"[Org: {org_slug}] Completed screening for resume {resume_id}: Score={result.get('final_score')}, Tier={result.get('tier')}")
         else:
-            logger.error(f"Screening failed for resume {resume_id}: {result.get('error')}")
+            logger.error(f"[Org: {org_slug}] Screening failed for resume {resume_id}: {result.get('error')}")
         return result
 
     except SoftTimeLimitExceeded:

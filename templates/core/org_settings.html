@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Settings — {{ org.name }} — ResumeAI{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl">
+
+    <!-- Breadcrumb -->
+    <nav class="mb-6 flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+        <a href="{% url 'core:dashboard' %}" class="transition hover:text-primary-600 dark:hover:text-primary-400">Dashboard</a>
+        <svg class="h-4 w-4 text-zinc-300 dark:text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="font-medium text-zinc-900 dark:text-white">Organization Settings</span>
+    </nav>
+
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Organization Settings</h1>
+        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Manage your workspace, branding, and team.</p>
+    </div>
+
+    <!-- General settings card -->
+    <div class="rounded-2xl border border-zinc-200/80 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+            <h2 class="text-base font-semibold text-zinc-900 dark:text-white">General</h2>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="p-6">
+            {% csrf_token %}
+            <div class="space-y-5">
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300" for="name">Organization name</label>
+                    <input type="text" name="name" id="name" value="{{ org.name }}" required class="form-input">
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Subdomain slug</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" value="{{ org.slug }}" disabled class="form-input flex-1 cursor-not-allowed opacity-60">
+                        <span class="shrink-0 text-xs text-zinc-400">.resumeai.com</span>
+                    </div>
+                    <p class="mt-1 text-xs text-zinc-400">Slug cannot be changed after creation.</p>
+                </div>
+                <div>
+                    <label class="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Logo</label>
+                    {% if org.logo %}
+                    <img src="{{ org.logo.url }}" alt="Logo" class="mb-3 h-14 w-14 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700">
+                    {% endif %}
+                    <input type="file" name="logo" accept="image/*" class="form-input-file">
+                    <p class="mt-1 text-xs text-zinc-400">PNG, JPG up to 2 MB. Displayed in the navbar.</p>
+                </div>
+            </div>
+            <div class="mt-6 flex items-center gap-3">
+                <button type="submit" class="btn-primary rounded-xl px-6 py-2.5 text-sm font-semibold text-white">
+                    Save changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Usage card -->
+    <div class="mt-6 rounded-2xl border border-zinc-200/80 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-900">
+        <div class="border-b border-zinc-100 px-6 py-4 dark:border-zinc-800">
+            <h2 class="text-base font-semibold text-zinc-900 dark:text-white">Usage</h2>
+        </div>
+        <div class="grid grid-cols-2 gap-4 p-6 sm:grid-cols-3">
+            <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                <dt class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Members</dt>
+                <dd class="mt-1 text-2xl font-bold text-zinc-900 dark:text-white">{{ member_count }}</dd>
+            </div>
+            <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                <dt class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Jobs created</dt>
+                <dd class="mt-1 text-2xl font-bold text-zinc-900 dark:text-white">{{ job_count }} <span class="text-sm font-normal text-zinc-400">/ {{ org.max_jobs }}</span></dd>
+            </div>
+            <div class="col-span-2 sm:col-span-1 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                <dt class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Plan</dt>
+                <dd class="mt-1 text-lg font-bold text-zinc-900 dark:text-white">Free</dd>
+            </div>
+        </div>
+        <div class="border-t border-zinc-100 px-6 py-4 dark:border-zinc-800">
+            <a href="{% url 'core:org_members' %}" class="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Manage members &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Danger zone -->
+    <div class="mt-6 rounded-2xl border border-red-200/70 bg-white shadow-soft dark:border-red-900/40 dark:bg-zinc-900">
+        <div class="border-b border-red-100 px-6 py-4 dark:border-red-900/40">
+            <h2 class="text-base font-semibold text-red-700 dark:text-red-400">Danger Zone</h2>
+        </div>
+        <div class="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm font-medium text-zinc-900 dark:text-white">Leave organization</p>
+                <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">You will lose access to all jobs and resumes in this workspace. An admin must re-invite you.</p>
+            </div>
+            <a href="{% url 'core:org_members' %}" class="shrink-0 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:border-red-900/60 dark:bg-zinc-900 dark:text-red-400 dark:hover:bg-red-950/30">
+                Manage access &rarr;
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

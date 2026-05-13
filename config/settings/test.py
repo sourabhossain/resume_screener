@@ -1,7 +1,9 @@
+import os
 from .base import *
 
 DEBUG = False
 SECRET_KEY = 'test-key-insecure-but-fine-for-tests'
+ALLOWED_HOSTS = ['*']
 
 # Avoid LLMClient "OPENAI_API_KEY not configured" noise when .env omits the key; tests mock API calls.
 if not OPENAI_API_KEY:
@@ -26,3 +28,6 @@ PASSWORD_HASHERS = [
 # Run Celery tasks synchronously in tests (no broker needed)
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+# Use testorg slug so TenantMiddleware resolves to the test org fixture
+FORCE_TENANT_SLUG = 'testorg'

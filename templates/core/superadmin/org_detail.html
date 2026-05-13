@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} — Super Admin{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl">
+    <div class="mb-6 flex items-center gap-4">
+        <a href="{% url 'core:superadmin_dashboard' %}" class="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">← All orgs</a>
+    </div>
+
+    <h1 class="mb-2 text-2xl font-bold text-zinc-900 dark:text-white">{{ org.name }}</h1>
+    <p class="mb-8 text-zinc-500">{{ org.slug }}.resumeai.com · Created {{ org.created_at|date:"N j, Y" }}</p>
+
+    <div class="grid gap-6 sm:grid-cols-2">
+        <!-- Members -->
+        <div class="rounded-2xl border border-zinc-200/80 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="border-b border-zinc-200/80 px-6 py-4 dark:border-zinc-800">
+                <h2 class="font-semibold text-zinc-900 dark:text-white">Members ({{ members|length }})</h2>
+            </div>
+            <ul class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {% for m in members %}
+                <li class="flex items-center justify-between px-6 py-3">
+                    <p class="text-sm text-zinc-900 dark:text-white">{{ m.user.email }}</p>
+                    <span class="text-xs text-zinc-500">{{ m.role }}</span>
+                </li>
+                {% empty %}
+                <li class="px-6 py-4 text-sm text-zinc-400">No members.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Recent jobs -->
+        <div class="rounded-2xl border border-zinc-200/80 bg-white shadow-soft dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="border-b border-zinc-200/80 px-6 py-4 dark:border-zinc-800">
+                <h2 class="font-semibold text-zinc-900 dark:text-white">Recent jobs</h2>
+            </div>
+            <ul class="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {% for job in jobs %}
+                <li class="px-6 py-3">
+                    <p class="text-sm font-medium text-zinc-900 dark:text-white">{{ job.title }}</p>
+                    <p class="text-xs text-zinc-500">{{ job.status }} · {{ job.created_at|date:"N j, Y" }}</p>
+                </li>
+                {% empty %}
+                <li class="px-6 py-4 text-sm text-zinc-400">No jobs.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <form method="post" action="{% url 'core:superadmin_toggle_org' org.pk %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="rounded-xl border {% if org.is_active %}border-red-200 bg-red-50 text-red-600 hover:bg-red-100{% else %}border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100{% endif %} px-5 py-2.5 text-sm font-semibold transition">
+                {% if org.is_active %}Deactivate organization{% else %}Activate organization{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
