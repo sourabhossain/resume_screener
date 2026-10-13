@@ -114,6 +114,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "core:org_picker"
+
+AUTHENTICATION_BACKENDS = [
+    "apps.core.backends.EmailOrUsernameBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
 LOGOUT_REDIRECT_URL = "login"
 DEFAULT_FROM_EMAIL = "noreply@resumeai.com"
 
