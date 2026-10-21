@@ -27,10 +27,11 @@ class ResumeService:
 
         try:
             text = DocumentExtractor.extract(resume.file.path)
-            if not text or not text.strip():
+            if not DocumentExtractor.has_enough_text(text):
                 raise DocumentExtractionError(
-                    "No text could be extracted from the file. "
-                    "It may be a scanned image or an empty document. "
+                    f"Too little text could be extracted from the file "
+                    f"({len((text or '').strip())} characters). "
+                    "It may be an unreadable scanned image or an empty document. "
                     "Please upload a text-based PDF or DOCX.",
                     file_path=resume.file.path
                 )

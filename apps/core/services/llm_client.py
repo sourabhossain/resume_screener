@@ -1,10 +1,11 @@
 """
 OpenAI LLM Client with caching and retry logic.
 """
+import base64
 import hashlib
 import json
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 from django.conf import settings
 from django.core.cache import cache
@@ -140,6 +141,52 @@ class LLMClient:
         result = response.content
         
 
+        cache.set(cache_key, result, self.CACHE_TIMEOUT)
+        
+        return result
+
+    @_llm_retry
+    def invoke_vision(self, prompt: str, images: List[bytes],
+                      system_prompt: str = "You are a helpful assistant.") -> str:
+        """
+        Invoke LLM with JPEG images and return text response.
+        Uses caching to avoid duplicate API calls.
+        
+        Args:
+            prompt: The user prompt
+            images: JPEG-encoded images
+            system_prompt: The system prompt
+            
+        Returns:
+            Text response
+        """
+        if not self._llm:
+            raise RuntimeError("LLM not initialized. Check OPENAI_API_KEY.")
+        
+        digest = hashlib.md5()
+        for image in images:
+            digest.update(image)
+        cache_key = self._get_cache_key(f"vision:{system_prompt}:{prompt}:{digest.hexdigest()}")
+        cached = cache.get(cache_key)
+        if cached:
+            logger.debug("LLM vision cache hit")
+            return cached
+        
+        content = [{"type": "text", "text": prompt}] + [
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64.b64encode(image).decode()}"},
+            }
+            for image in images
+        ]
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=content)
+        ]
+        
+        response = self._llm.invoke(messages)
+        result = response.content
+        
         cache.set(cache_key, result, self.CACHE_TIMEOUT)
         
         return result

@@ -49,6 +49,69 @@ class TestDocumentExtractor:
         assert DocumentExtractor.is_supported("resume.txt") is False
         assert DocumentExtractor.is_supported("resume.xyz") is False
 
+    def test_has_enough_text(self):
+        """Stray overlay text from an image-only CV is not enough to screen."""
+        from apps.core.services.document_extractor import DocumentExtractor
+
+        assert DocumentExtractor.has_enough_text("") is False
+        assert DocumentExtractor.has_enough_text(None) is False
+        assert DocumentExtractor.has_enough_text("(8th)\n") is False
+        assert DocumentExtractor.has_enough_text("x" * 200) is False  # long but one word
+        assert DocumentExtractor.has_enough_text("Python developer with Django " * 10) is True
+
+    def test_pdf_with_text_layer_skips_ocr(self, tmp_path):
+        """A PDF with a real text layer is not sent to OCR."""
+        from apps.core.services.document_extractor import DocumentExtractor
+
+        pdf = tmp_path / "resume.pdf"
+        pdf.write_bytes(b"%PDF-1.7")
+        text = "Python developer with Django " * 10
+        with patch.object(DocumentExtractor, '_extract_pdf_text_layer', return_value=text), \
+             patch.object(DocumentExtractor, '_ocr_pdf') as mock_ocr:
+            assert DocumentExtractor.extract(str(pdf)) == text
+        mock_ocr.assert_not_called()
+
+    def test_image_only_pdf_falls_back_to_ocr(self, tmp_path):
+        """An image-only PDF is read with OCR."""
+        from apps.core.services.document_extractor import DocumentExtractor
+
+        pdf = tmp_path / "resume.pdf"
+        pdf.write_bytes(b"%PDF-1.7")
+        ocr_text = "MD JESUNUR ALAM JESUN Finance operation associate " * 5
+        with patch.object(DocumentExtractor, '_extract_pdf_text_layer', return_value="(8th)\n"), \
+             patch.object(DocumentExtractor, '_ocr_pdf', return_value=ocr_text):
+            assert DocumentExtractor.extract(str(pdf)) == ocr_text
+
+    def test_ocr_returning_less_keeps_text_layer(self, tmp_path):
+        """If OCR reads nothing, the (short) text layer is returned unchanged."""
+        from apps.core.services.document_extractor import DocumentExtractor
+
+        pdf = tmp_path / "resume.pdf"
+        pdf.write_bytes(b"%PDF-1.7")
+        with patch.object(DocumentExtractor, '_extract_pdf_text_layer', return_value="(8th)\n"), \
+             patch.object(DocumentExtractor, '_ocr_pdf', return_value=""):
+            assert DocumentExtractor.extract(str(pdf)) == "(8th)\n"
+
+    def test_ocr_sends_rendered_pages_to_vision_llm(self, tmp_path):
+        """Pages are rendered to JPEG, capped at OCR_MAX_PAGES, and sent in one call."""
+        from pypdf import PdfWriter
+        from apps.core.services.document_extractor import DocumentExtractor
+
+        writer = PdfWriter()
+        for _ in range(DocumentExtractor.OCR_MAX_PAGES + 2):
+            writer.add_blank_page(width=200, height=200)
+        pdf = tmp_path / "scanned.pdf"
+        with open(pdf, 'wb') as f:
+            writer.write(f)
+
+        with patch('apps.core.services.document_extractor.llm_client') as mock_llm:
+            mock_llm.invoke_vision.return_value = "OCR text"
+            assert DocumentExtractor._ocr_pdf(str(pdf)) == "OCR text"
+
+        images = mock_llm.invoke_vision.call_args.args[1]
+        assert len(images) == DocumentExtractor.OCR_MAX_PAGES
+        assert all(image.startswith(b'\xff\xd8') for image in images)  # JPEG magic
+
 
 @pytest.mark.django_db
 class TestPromptLoader:
@@ -111,6 +174,23 @@ class TestLLMClient:
         """Test that invoke_text returns string."""
         pass
 
+    def test_invoke_vision_sends_images_as_data_urls(self):
+        """Images go in one message as base64 JPEG data URLs after the prompt."""
+        from django.core.cache import cache
+        from apps.core.services.llm_client import llm_client
+
+        cache.clear()
+        mock_llm = MagicMock()
+        mock_llm.invoke.return_value = MagicMock(content="Transcribed text")
+        with patch.object(llm_client, '_llm', mock_llm):
+            result = llm_client.invoke_vision("Read this", [b'\xff\xd8one', b'\xff\xd8two'])
+
+        assert result == "Transcribed text"
+        content = mock_llm.invoke.call_args.args[0][1].content
+        assert content[0] == {"type": "text", "text": "Read this"}
+        assert [part["type"] for part in content[1:]] == ["image_url", "image_url"]
+        assert content[1]["image_url"]["url"].startswith("data:image/jpeg;base64,")
+
 
 @pytest.mark.django_db
 class TestResumeService:
@@ -149,6 +229,36 @@ class TestResumeService:
         assert sample_resume.screening_status == 'completed'
         assert sample_resume.achievements == ['Shipped billing refactor']
         assert sample_resume.achievement_score == 88
+
+    def test_extract_text_rejects_too_little_text(self, sample_resume, tmp_path):
+        """Near-empty extraction fails instead of being screened (and scored ~0)."""
+        from apps.core.exceptions import DocumentExtractionError
+        from apps.core.services.resume_service import ResumeService
+
+        sample_resume.file.name = 'resumes/scanned.pdf'
+        with patch('apps.core.services.document_extractor.DocumentExtractor.extract',
+                   return_value="(8th)\n"):
+            with pytest.raises(DocumentExtractionError, match="Too little text"):
+                ResumeService.extract_text(sample_resume)
+
+        sample_resume.refresh_from_db()
+        assert sample_resume.raw_text == ''
+
+    def test_process_resume_marks_too_little_text_failed(self, sample_resume):
+        """HR sees 'failed' rather than a misleading low score."""
+        from apps.core.services.resume_service import ResumeService
+
+        sample_resume.file.name = 'resumes/scanned.pdf'
+        with patch('apps.core.services.document_extractor.DocumentExtractor.extract',
+                   return_value="(8th)\n"), \
+             patch.object(ResumeService, 'run_screening') as mock_screen:
+            result = ResumeService.process_resume(sample_resume)
+
+        mock_screen.assert_not_called()
+        assert result['success'] is False
+        assert result['error_type'] == 'extraction'
+        sample_resume.refresh_from_db()
+        assert sample_resume.screening_status == 'failed'
 
 
 @pytest.mark.django_db
