@@ -36,8 +36,11 @@ class DocumentExtractor:
 
     # OCR fallback for scanned / image-only PDFs: render pages and read them with
     # the vision-capable LLM. 2x scale = 144 DPI, enough for resume body text.
+    # The longest side is capped so oversized pages (posters, odd exports) cannot
+    # blow up worker memory; the vision API downsizes past 2048px anyway.
     OCR_MAX_PAGES = 4
     OCR_RENDER_SCALE = 2
+    OCR_MAX_IMAGE_SIDE = 2048
     
     @classmethod
     def extract(cls, file_path: str) -> str:
@@ -104,7 +107,11 @@ class DocumentExtractor:
             for index in range(min(len(pdf), cls.OCR_MAX_PAGES)):
                 page = pdf[index]
                 try:
-                    image = page.render(scale=cls.OCR_RENDER_SCALE).to_pil().convert('RGB')
+                    longest_side = max(page.get_size())
+                    if longest_side <= 0:
+                        continue
+                    scale = min(cls.OCR_RENDER_SCALE, cls.OCR_MAX_IMAGE_SIDE / longest_side)
+                    image = page.render(scale=scale).to_pil().convert('RGB')
                 finally:
                     page.close()
                 buffer = io.BytesIO()

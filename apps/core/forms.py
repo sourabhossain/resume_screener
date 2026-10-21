@@ -57,6 +57,9 @@ class FileSaveMixin:
             instance.file_name = file.name
             _, raw_ext = os.path.splitext(file.name)
             instance.file_type = raw_ext.lstrip('.').lower()
+            if 'file' in self.changed_data:
+                # Text cached from the previous file would otherwise be screened again
+                instance.raw_text = ''
         if commit:
             instance.save()
         return instance

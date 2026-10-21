@@ -175,7 +175,10 @@ class LLMClient:
         content = [{"type": "text", "text": prompt}] + [
             {
                 "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{base64.b64encode(image).decode()}"},
+                "image_url": {
+                    "url": f"data:image/jpeg;base64,{base64.b64encode(image).decode()}",
+                    "detail": "high",
+                },
             }
             for image in images
         ]
@@ -186,6 +189,12 @@ class LLMClient:
         
         response = self._llm.invoke(messages)
         result = response.content
+        if isinstance(result, list):
+            # Some models return content blocks instead of a plain string
+            result = "".join(
+                block.get("text", "") if isinstance(block, dict) else str(block)
+                for block in result
+            )
         
         cache.set(cache_key, result, self.CACHE_TIMEOUT)
         

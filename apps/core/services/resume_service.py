@@ -19,7 +19,9 @@ class ResumeService:
     def extract_text(resume) -> str:
         from apps.core.services.document_extractor import DocumentExtractor
 
-        if resume.raw_text:
+        # Cached text is reused only if it is screenable: text saved before the
+        # minimum-length check (e.g. "(8th)" from an image-only CV) is re-extracted.
+        if DocumentExtractor.has_enough_text(resume.raw_text):
             return resume.raw_text
 
         if not resume.file:
