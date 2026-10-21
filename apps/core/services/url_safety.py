@@ -33,6 +33,11 @@ _GARBAGE_EXTRACTED_HOSTS = frozenset({
     'nuxt.js',
     'jquery.js',
     'typescript.js',
+    'asp.net',
+    'vb.net',
+    'ado.net',
+    'socket.io',
+    'draw.io',
 })
 
 

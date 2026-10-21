@@ -63,7 +63,17 @@
                       isExisting: {% if resume.file %}true{% else %}false{% endif %},
                       originalFileName: '{% if resume.file %}{{ resume.file_name|escapejs }}{% endif %}',
                       originalFileType: '{% if resume.file %}{{ resume.file_type }}{% endif %}',
-                      handleFile(file) {
+                      readError: '',
+                      async handleFile(picked) {
+                        let file;
+                        try {
+                          file = await window.readFileIntoMemory(picked);
+                        } catch (e) {
+                          this.clearFile();
+                          this.readError = 'Could not read this file. Download it to your device and choose it again.';
+                          return;
+                        }
+                        this.readError = '';
                         this.isExisting = false;
                         this.fileName = file.name;
                         this.fileSize = file.size > 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
@@ -73,6 +83,7 @@
                         this.$refs.fileInput.files = dt.files;
                       },
                       clearFile() {
+                        this.readError = '';
                         this.dragCounter = 0;
                         this.fileName = this.originalFileName;
                         this.fileSize = '';
@@ -143,6 +154,7 @@
                         {% if form.file.errors %}
                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ form.file.errors.0 }}</p>
                         {% endif %}
+                        <p x-show="readError" x-text="readError" style="display:none" class="mt-2 text-sm text-red-600 dark:text-red-400"></p>
                     </div>
                 </div>
 

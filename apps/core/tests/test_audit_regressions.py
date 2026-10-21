@@ -188,6 +188,23 @@ class TestLinkExtraction:
         urls = [link.url for link in LinkExtractor.extract(text)]
         assert urls == ['https://github.com/octocat', 'https://janedoe.dev/work', 'https://www.portfolio.io']
 
+    @pytest.mark.parametrize('text', [
+        'Skills: ASP.NET, VB.NET, ADO.NET, Node.js, Socket.io',
+        'Education: B.Sc in CSE, B.Com, M.Tech, Ph.D',
+        'Attached resume.pdf and report.docx; see main.py and README.md',
+    ])
+    def test_tech_names_degrees_and_files_are_not_links(self, text):
+        from apps.core.services.link_extractor import LinkExtractor
+        assert LinkExtractor.extract(text) == []
+
+    def test_bare_domains_and_explicit_urls_still_found(self):
+        from apps.core.services.link_extractor import LinkExtractor
+        text = ('Portfolio sourab.dev, shop.com.bd and site.io/work. '
+                'Also https://Docs.Example.NET/x and WWW.MyBrand.COM')
+        urls = [link.url for link in LinkExtractor.extract(text)]
+        assert urls == ['https://sourab.dev', 'https://shop.com.bd', 'https://site.io/work',
+                        'https://Docs.Example.NET/x', 'https://WWW.MyBrand.COM']
+
     def test_confidence_from_llm_is_coerced(self):
         from apps.core.services.link_verifier import LinkVerifier
         assert LinkVerifier._as_confidence(None) == 0.0

@@ -47,6 +47,19 @@ class LinkExtractor:
         re.IGNORECASE
     )
 
+    # Without "http(s)://" or "www.", text like "ASP.NET", "B.Sc", "B.Com" or
+    # "resume.pdf" also matches the domain pattern. Such bare matches only count
+    # with a lowercase, commonly used TLD and a name of 2+ characters.
+    BARE_DOMAIN_TLDS = frozenset({
+        'com', 'net', 'org', 'io', 'dev', 'me', 'co', 'app', 'ai', 'info', 'biz', 'xyz',
+        'tech', 'site', 'online', 'page', 'blog', 'design', 'studio', 'website', 'space',
+        'live', 'pro', 'cloud', 'codes', 'digital', 'art', 'portfolio', 'work', 'works',
+        'link', 'bio', 'one', 'world', 'life', 'agency', 'solutions', 'tools', 'edu', 'gov',
+        'bd', 'in', 'uk', 'us', 'ca', 'au', 'nz', 'de', 'fr', 'nl', 'se', 'no', 'dk', 'fi',
+        'es', 'it', 'pt', 'ch', 'at', 'be', 'ie', 'pl', 'eu', 'sg', 'my', 'pk', 'lk', 'np',
+        'ae', 'sa', 'qa', 'jp', 'cn', 'kr', 'hk', 'tw', 'za', 'ng', 'ke', 'br', 'mx',
+    })
+
     SKIP_DOMAINS = {
         'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
         'facebook.com', 'twitter.com', 'instagram.com',
@@ -62,6 +75,11 @@ class LinkExtractor:
         for match in cls.URL_PATTERN.finditer(text):
             raw_url = match.group(0)
             url = cls._normalize_url(raw_url)
+
+            explicit = raw_url.lower().startswith(('http://', 'https://', 'www.'))
+            if (not explicit and cls._classify(url) == LinkType.PORTFOLIO
+                    and not cls._is_plausible_bare_domain(match.group(1))):
+                continue
 
             if url in seen_urls:
                 continue
@@ -86,6 +104,13 @@ class LinkExtractor:
             ))
 
         return links[:10]  # max 10 links per CV
+
+    @classmethod
+    def _is_plausible_bare_domain(cls, host_and_path: str) -> bool:
+        host = host_and_path.split('/', 1)[0].rstrip('.')
+        labels = host.split('.')
+        tld = labels[-1]
+        return tld.islower() and tld in cls.BARE_DOMAIN_TLDS and len(labels[0]) >= 2
 
     @classmethod
     def _normalize_url(cls, url: str) -> str:

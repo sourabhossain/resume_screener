@@ -1,39 +1,47 @@
-Django>=5.0
-playwright>=1.40.0
-httpx>=0.26.0
-psycopg2-binary>=2.9
-python-dotenv>=1.0
-Pillow>=10.0
-requests
+# Exact versions: the app and its tests are verified against these.
+# Django stays on 5.2 LTS because the Docker image runs Python 3.11 (Django 6 needs 3.12+).
+Django==5.2.18
+playwright==1.59.0
+httpx==0.28.1
+psycopg2-binary==2.9.11
+python-dotenv==1.2.1
+Pillow==12.0.0
+requests==2.32.5
 
 # Testing
-pytest>=8.0
-pytest-django>=4.7
-factory-boy>=3.3
-pytest-cov>=4.1
+pytest==9.0.1
+pytest-django==4.11.1
+factory-boy==3.3.3
+pytest-cov==7.0.0
 
 # API
-djangorestframework>=3.14
-drf-spectacular>=0.27
+djangorestframework==3.16.1
+drf-spectacular==0.29.0
 
 # Security
-django-ratelimit>=4.1
+django-ratelimit==4.1.0
 
 # AI/NLP
-langgraph>=0.2
-langchain>=0.3
-langchain-openai>=0.2
-openai>=1.0
-pypdf>=4.0.0
-pypdfium2>=4.0
-python-docx>=1.0
-pydantic>=2.0
-tenacity>=8.0
+langgraph==1.0.4
+langchain==1.1.2
+langchain-openai==1.1.0
+openai==2.9.0
+pypdf==6.10.2
+pypdfium2==5.14.0
+python-docx==1.2.0
+pydantic==2.12.5
+tenacity==9.1.2
+# Pulled in by langchain/langgraph; pinned so a fresh install matches what was tested
+langchain-core==1.1.1
+langgraph-checkpoint==3.0.1
+langgraph-prebuilt==1.0.5
+langgraph-sdk==0.2.12
+langsmith==0.4.55
 
 # Async Tasks
-celery>=5.3
-redis>=5.0
+celery==5.6.0
+redis==7.1.0
 
 # Monitoring & Logging
-sentry-sdk>=1.0
-python-json-logger>=2.0
+sentry-sdk==2.72.0
+python-json-logger==4.2.0

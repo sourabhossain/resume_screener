@@ -15,6 +15,15 @@
             }
         });
 
+        // Android Chrome (notably in-app browsers such as LinkedIn's) reads a picked
+        // file only at submit time and fails with ERR_UPLOAD_FILE_CHANGED if the
+        // provider (Drive, Downloads, WhatsApp) changed or revoked it meanwhile.
+        // Copying the bytes into memory when the file is picked avoids that.
+        window.readFileIntoMemory = async function (file) {
+            const buffer = await file.arrayBuffer();
+            return new File([buffer], file.name, { type: file.type, lastModified: file.lastModified });
+        };
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('messageToast', () => ({
                 visible: true,

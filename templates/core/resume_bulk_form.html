@@ -156,14 +156,15 @@ function bulkUpload() {
         MAX_SIZE: 5 * 1024 * 1024,
         ALLOWED: ['pdf', 'docx'],
 
-        addFiles(fileList) {
+        async addFiles(fileList) {
+            // Copy before any await: the input's FileList is cleared below
             const incoming = Array.from(fileList);
-            incoming.forEach(f => {
+            for (const f of incoming) {
                 const alreadyAdded = this.files.some(x => x.name === f.name && x.size === f.size);
                 if (!alreadyAdded) {
-                    this.files.push(this.buildItem(f));
+                    this.files.push(await this.buildItem(f));
                 }
-            });
+            }
             if (this.files.length > this.MAX_FILES) {
                 this.files = this.files.slice(0, this.MAX_FILES);
             }
@@ -171,12 +172,19 @@ function bulkUpload() {
             this.$refs.fileInput.value = '';
         },
 
-        buildItem(f) {
+        async buildItem(f) {
             const ext = f.name.split('.').pop().toLowerCase();
             let error = null;
             if (!this.ALLOWED.includes(ext)) error = 'Unsupported format (PDF or DOCX only)';
             else if (f.size > this.MAX_SIZE) error = 'Exceeds 5 MB limit';
             else if (f.size === 0) error = 'Empty file';
+            if (!error) {
+                try {
+                    f = await window.readFileIntoMemory(f);
+                } catch (e) {
+                    error = 'Could not read this file. Download it to your device and choose it again.';
+                }
+            }
             return {
                 file: f,
                 name: f.name,
