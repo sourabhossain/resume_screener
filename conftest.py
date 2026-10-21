@@ -16,6 +16,12 @@ def _stub_verify_resume_links_delay(monkeypatch):
     monkeypatch.setattr(verify_resume_links_task, 'delay', lambda *a, **kw: None)
 
 
+@pytest.fixture(autouse=True)
+def _isolated_media_root(settings, tmp_path):
+    """Keep uploads made by tests out of the real media/ folder."""
+    settings.MEDIA_ROOT = str(tmp_path / 'media')
+
+
 @pytest.fixture
 def client():
     """Django test client fixture."""

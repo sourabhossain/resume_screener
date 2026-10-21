@@ -110,7 +110,7 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
                         'verified_claims': result.get('verified_claims', []),
                         'discrepancies': result.get('discrepancies', []),
                         'additional_insights': result.get('additional_insights', []),
-                        'confidence': result.get('confidence', 0.0)
+                        'confidence': cls._as_confidence(result.get('confidence')),
                     })
                     all_verified_claims.extend(result.get('verified_claims', []))
                     all_discrepancies.extend(result.get('discrepancies', []))
@@ -171,6 +171,14 @@ If page is inaccessible or irrelevant, return belongs_to_candidate: false with e
 
         final_score = base_score * avg_confidence + base_score * (1 - avg_confidence) * 0.5
         return round(min(final_score, 100.0), 1)
+
+    @staticmethod
+    def _as_confidence(value) -> float:
+        """LLM may return null or a string; _calculate_score sums these."""
+        try:
+            return min(max(float(value), 0.0), 1.0)
+        except (TypeError, ValueError):
+            return 0.0
 
     @staticmethod
     def _clean_html(html: str) -> str:

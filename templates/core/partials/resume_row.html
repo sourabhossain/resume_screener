@@ -1,6 +1,6 @@
 <tr id="resume-row-{{ resume.pk }}"
     class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
-    {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' or resume.verification_status == 'processing' or resume.verification_status == 'pending' %}
+    {% if resume.screening_status == 'processing' or resume.screening_status == 'pending' or resume.screening_status == 'completed' and resume.verification_status == 'pending' or resume.verification_status == 'processing' %}
     hx-get="{% url 'core:resume_row_fragment' resume.pk %}"
     hx-trigger="every 3s"
     hx-target="this"
@@ -94,7 +94,7 @@
     </td>
 
     <td class="px-5 py-4 text-center align-middle sm:px-6 sm:py-5">
-        {% if resume.verification_status == 'pending' or resume.verification_status == 'processing' %}
+        {% if resume.screening_status == 'completed' and resume.verification_status == 'pending' or resume.verification_status == 'processing' %}
         <svg class="mx-auto h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Verification pending">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>

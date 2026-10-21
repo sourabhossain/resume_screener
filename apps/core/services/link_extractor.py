@@ -29,7 +29,10 @@ class ExtractedLink:
 
 class LinkExtractor:
     # Regex to find URLs in text
+    # The look-behind and the (?![\w@-]) look-ahead keep email addresses
+    # (e.g. a referee's "md.monir@dgepay.net") from being read as links.
     URL_PATTERN = re.compile(
+        r'(?<![\w@.-])'
         r'(?:https?://)?'
         r'(?:www\.)?'
         r'('
@@ -39,7 +42,7 @@ class LinkExtractor:
         r'dribbble\.com/[^\s,)>\]"\']+|'
         r'stackoverflow\.com/users/[^\s,)>\]"\']+|'
         r'scholar\.google\.com/[^\s,)>\]"\']+|'
-        r'[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:/[^\s,)>\]"\']*)?'
+        r'[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?![\w@-])(?:/[^\s,)>\]"\']*)?'
         r')',
         re.IGNORECASE
     )

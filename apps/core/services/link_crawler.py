@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Timeout for all requests
 REQUEST_TIMEOUT = 15  # seconds
 MAX_CONTENT_LENGTH = 50_000  # chars
+MAX_REDIRECTS = 5
 
 
 @dataclass
@@ -82,13 +83,26 @@ class LinkCrawler:
 
     @classmethod
     async def _crawl_with_httpx(cls, url: str) -> CrawlResult:
+        # Redirects are followed by hand so every hop passes the SSRF guard;
+        # follow_redirects=True would let a public URL bounce to 169.254.169.254.
         async with httpx.AsyncClient(
             headers=cls.HEADERS,
             timeout=REQUEST_TIMEOUT,
-            follow_redirects=True,
+            follow_redirects=False,
             verify=True,
         ) as client:
             response = await client.get(url)
+            for _ in range(MAX_REDIRECTS):
+                if not response.is_redirect:
+                    break
+                next_url = str(response.url.join(response.headers['location']))
+                safe, reason = is_safe_public_http_url(next_url)
+                if not safe:
+                    logger.info('Blocked redirect (SSRF guard): %s -> %s — %s', url, next_url, reason)
+                    return CrawlResult(url=url, success=False, error=f'blocked redirect: {reason}')
+                response = await client.get(next_url)
+            if response.is_redirect:
+                return CrawlResult(url=url, success=False, error='too many redirects')
             content = response.text[:MAX_CONTENT_LENGTH]
             title = cls._extract_title(content)
             return CrawlResult(

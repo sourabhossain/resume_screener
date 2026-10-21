@@ -368,13 +368,35 @@ class TestResumeViews:
         assert b'hx-trigger="every 3s"' in response.content
 
     def test_resume_status_fragment_no_poll_when_done(self, authenticated_client, sample_resume):
-        """Fragment omits polling trigger when screening is complete, stopping the poll."""
+        """Fragment omits polling trigger once screening and verification are complete."""
         sample_resume.screening_status = 'completed'
+        sample_resume.verification_status = 'completed'
         sample_resume.save()
         response = authenticated_client.get(
             reverse('core:resume_status_fragment', kwargs={'pk': sample_resume.pk})
         )
         assert b'hx-trigger="every 3s"' not in response.content
+
+    def test_resume_status_fragment_polls_while_verification_queued(self, authenticated_client, sample_resume):
+        """Screening done, verification queued: keep polling so its results appear."""
+        sample_resume.screening_status = 'completed'
+        sample_resume.verification_status = 'pending'
+        sample_resume.save()
+        response = authenticated_client.get(
+            reverse('core:resume_status_fragment', kwargs={'pk': sample_resume.pk})
+        )
+        assert b'hx-trigger="every 3s"' in response.content
+
+    @pytest.mark.parametrize('fragment', ['core:resume_status_fragment', 'core:resume_row_fragment'])
+    def test_failed_screening_does_not_poll_or_show_verifying(self, authenticated_client, sample_resume, fragment):
+        """Verification never runs after a failed screening, so its default 'pending' must not poll forever."""
+        sample_resume.screening_status = 'failed'
+        sample_resume.verification_status = 'pending'
+        sample_resume.save()
+        response = authenticated_client.get(reverse(fragment, kwargs={'pk': sample_resume.pk}))
+        assert b'hx-trigger="every 3s"' not in response.content
+        assert b'Verifying links' not in response.content
+        assert b'title="Verification pending"' not in response.content
 
     def test_resume_row_fragment_polls_when_processing(self, authenticated_client, sample_resume):
         """Row fragment includes polling trigger when screening is in progress."""

@@ -77,6 +77,25 @@ class ResumeScreeningState(TypedDict):
     error: Optional[str]
 
 
+def _as_float(value, default: float = 0.0) -> float:
+    """LLM JSON often has null or "3+" for numbers; float() on those would fail the whole screening."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _as_str_list(value) -> List[str]:
+    """LLM JSON may return null, a bare string, or objects where a list of strings is expected."""
+    if not value:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if not isinstance(value, list):
+        return [str(value)]
+    return [item if isinstance(item, str) else str(item) for item in value if item not in (None, '')]
+
+
 def detect_job_type(job_description: str) -> str:
     try:
         config = settings.AI_SCREENING_CONFIG
@@ -123,12 +142,12 @@ def extract_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
         response = llm_client.invoke_json(prompt, "You are an expert resume parser.")
 
-        state['candidate_name'] = response.get('candidate_name', 'Unknown')
-        state['skills'] = response.get('skills', [])
-        state['experience_years'] = float(response.get('experience_years', 0))
-        state['education'] = response.get('education', [])
-        state['certifications'] = response.get('certifications', [])
-        state['achievements'] = response.get('achievements', [])
+        state['candidate_name'] = str(response.get('candidate_name') or 'Unknown')
+        state['skills'] = _as_str_list(response.get('skills'))
+        state['experience_years'] = _as_float(response.get('experience_years'))
+        state['education'] = _as_str_list(response.get('education'))
+        state['certifications'] = _as_str_list(response.get('certifications'))
+        state['achievements'] = _as_str_list(response.get('achievements'))
 
         logger.info(
             f"[Resume {state.get('resume_id')}] Extracted profile for: {state['candidate_name']} "
@@ -167,11 +186,11 @@ def match_node(state: ResumeScreeningState) -> ResumeScreeningState:
 
         response = llm_client.invoke_json(prompt, "You are an expert HR analyst.")
 
-        state['matched_skills'] = response.get('matched_skills', [])
-        state['missing_skills'] = response.get('missing_skills', [])
-        state['experience_match_score'] = float(response.get('experience_match_score', 0))
-        state['education_match_score'] = float(response.get('education_match_score', 0))
-        state['achievement_score'] = float(response.get('achievement_score', 0))
+        state['matched_skills'] = _as_str_list(response.get('matched_skills'))
+        state['missing_skills'] = _as_str_list(response.get('missing_skills'))
+        state['experience_match_score'] = _as_float(response.get('experience_match_score'))
+        state['education_match_score'] = _as_float(response.get('education_match_score'))
+        state['achievement_score'] = _as_float(response.get('achievement_score'))
 
         raw_cert = response.get('certification_match_score')
         if raw_cert is not None:

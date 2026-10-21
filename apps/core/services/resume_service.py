@@ -68,7 +68,10 @@ class ResumeService:
             from apps.core.models import Resume as ResumeModel
             resume = ResumeModel.objects.select_for_update().get(pk=resume.pk)
 
-            resume.candidate_name = result.get('candidate_name', resume.candidate_name)
+            # Keep the name HR entered when the AI could not find one; cap to the column size
+            ai_name = (result.get('candidate_name') or '').strip()
+            if ai_name and ai_name.lower() != 'unknown':
+                resume.candidate_name = ai_name[:255]
             resume.skills = result.get('skills', [])
             resume.education = result.get('education', [])
             resume.certifications = result.get('certifications', [])

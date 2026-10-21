@@ -3,7 +3,7 @@ Django REST Framework ViewSets for Job and Resume.
 """
 from rest_framework import viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Prefetch, Q
@@ -98,6 +98,8 @@ class ResumeViewSet(viewsets.ModelViewSet):
         queryset = Resume.objects.select_related('job')
         job_id = self.request.query_params.get('job', None)
         if job_id:
+            if not job_id.isdigit():
+                raise ValidationError({'job': 'Must be a job id.'})
             queryset = queryset.filter(job_id=job_id)
         tier = self.request.query_params.get('tier', None)
         if tier in ['top', 'mid', 'low']:

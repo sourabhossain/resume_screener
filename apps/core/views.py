@@ -263,7 +263,8 @@ def serve_protected_media(request, path):
     media_root = os.path.abspath(settings.MEDIA_ROOT) + os.sep
     if not os.path.abspath(full_path).startswith(media_root):
         raise Http404
-    if not os.path.exists(full_path):
+    # isfile, not exists: a directory path (e.g. /media/resumes/) would 500 on open()
+    if not os.path.isfile(full_path):
         raise Http404
     return FileResponse(open(full_path, 'rb'))
 

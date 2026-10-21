@@ -1,6 +1,7 @@
 import os
 
 from django import forms
+from django.core.files.uploadedfile import UploadedFile
 from .models import Job, Resume
 
 
@@ -19,7 +20,9 @@ class FileValidationMixin:
     
     def validate_resume_file(self, file):
         """Validate file type, size, and content (magic byte check)."""
-        if not file:
+        # Only new uploads: an unchanged stored file was validated when uploaded,
+        # and reading it again leaks a file handle (or 500s if it left disk).
+        if not file or not isinstance(file, UploadedFile):
             return file
         
         # Check file size
@@ -53,13 +56,14 @@ class FileSaveMixin:
         """Save instance with file_name and file_type populated."""
         instance = super().save(commit=False)
         file = self.cleaned_data.get('file')
-        if file:
+        # Only for a new upload: an unchanged FieldFile's name is the storage path
+        # ("resumes/cv_AbC12.pdf"), which would overwrite the original file name.
+        if file and 'file' in self.changed_data:
             instance.file_name = file.name
             _, raw_ext = os.path.splitext(file.name)
             instance.file_type = raw_ext.lstrip('.').lower()
-            if 'file' in self.changed_data:
-                # Text cached from the previous file would otherwise be screened again
-                instance.raw_text = ''
+            # Text cached from the previous file would otherwise be screened again
+            instance.raw_text = ''
         if commit:
             instance.save()
         return instance
@@ -146,6 +150,11 @@ class ResumeForm(FileValidationMixin, FileSaveMixin, forms.ModelForm):
             'file': 'Resume File',
         }
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # The model allows no file, but a new resume without one can only fail screening
+        self.fields['file'].required = True
+
     def clean_file(self):
         """Validate uploaded file using mixin."""
         return self.validate_resume_file(self.cleaned_data.get('file'))

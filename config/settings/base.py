@@ -236,6 +236,7 @@ AI_SCREENING_CONFIG = {
     'NON_TECH_ACHIEVEMENT_WEIGHT': 0.20,
     'TOP_TIER_THRESHOLD': 80,
     'MID_TIER_THRESHOLD': 60,
-    'MAX_RESUME_CHARS': 4000,
+    # A 2-page CV is ~5-8k chars; 4000 cut off education/skills on page 2
+    'MAX_RESUME_CHARS': 12000,
     'MAX_JOB_DESC_CHARS': 3000,
 }
